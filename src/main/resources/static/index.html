@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Nemo – Solver d'emplois du temps</title>
+    <link rel="stylesheet" href="/css/calendar.css">
+    <link rel="stylesheet" href="/css/table.css">
+    <link rel="stylesheet" href="/css/controls.css">
+
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 2rem;
+        }
+
+        fieldset {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-top: 0.5rem;
+        }
+
+        .pivot-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.6rem;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<h1>Nemo – Gestionnaire des Unités d'Enseignement</h1>
+
+<details class="collapsible">
+    <summary>Création d'une nouvelle UE</summary>
+<form id="nemoForm">
+    <fieldset>
+        <legend>Description Unité d'Enseignement</legend>
+
+        <label>
+            UE ID
+            <input type="text" id="ueId" value="TU1" required />
+        </label>
+
+        <label>
+            Nom
+            <input type="text" id="ueName" value="Algorithmique" required />
+        </label>
+        <button type="button" id="addUEBtn">Ajouter l’UE</button>
+    </fieldset>
+
+    <fieldset>
+        <legend>Description Enseignement</legend>
+
+        <label>
+            UE ID
+            <select id="teachingUnitSelect">
+                <option value="">— sélectionner une UE —</option>
+            </select>
+        </label>
+
+        <label>
+            Type
+            <select id="teachingType">
+                <option value="CM">CM</option>
+                <option value="TD">TD</option>
+                <option value="TP">TP</option>
+            </select>
+        </label>
+
+        <label>
+            Date de début
+            <input type="date" id="startDate">
+        </label>
+
+        <label>
+            Sessions
+            <input type="number"
+                   id="sessions"
+                   min="1"
+                   step="1"
+                   value="12"
+                   required>
+        </label>
+
+        <label>
+            Durée (minutes)
+            <input type="number" id="duration" value="120" />
+        </label>
+
+        <label>
+            Capacité par groupe
+            <input type="number" id="groupCapacity" value="20" />
+        </label>
+
+        <label>
+            Nombre d'enseignants
+            <input type="number" id="teacherCount" value="1" />
+        </label>
+        <button type="button" id="addTeachingBtn">Ajouter l'enseignement</button>
+    </fieldset>
+</form>
+</details>
+
+<details class="collapsible" open>
+    <summary>Détails et configuration des UEs</summary>
+    <div id="teachingTableContainer">
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+            <thead>
+                <tr>
+                    <th></th> <!-- column for up/down arrows -->
+                    <th><input type="checkbox" id="selectAllTeachings" checked></th>
+                    <th>UE</th>
+                    <th>Type</th>
+                    <th>Capacité par groupe</th>
+                    <th>Enseignants</th>
+                    <th>Début</th>
+                    <th>Fin</th>
+                    <th>Sessions totales</th>
+                    <th>Sessions/semaine</th>
+                    <th>Durée (minutes)</th>
+                    <th>Etudiants</th>
+                    <th>Groupes</th>
+                </tr>
+            </thead>
+            <tbody id="teachingTableBody"></tbody>
+        </table>
+    </div>
+
+</details>
+
+<details class="collapsible" id="timeConstraints">
+    <summary>Contraintes de temps</summary>
+    <div id="timeConstraintsContainer">
+        <table id="timeConstraintsTable">
+            <thead>
+            <tr>
+                <th></th>
+                <!-- Colonnes pour les semaines -->
+            </tr>
+            <tr>
+                <th></th>
+                <!-- Sous-en-têtes pour les jours de la semaine -->
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Lignes pour les créneaux horaires -->
+            </tbody>
+        </table>
+    </div>
+</details>
+
+<details class="collapsible">
+    <summary>Calendrier</summary>
+    <div style="margin: 20px;">
+        <div class="pivot-row">
+            <label for="pivotStrategy">
+                Stratégie de regroupement des étudiants :
+            </label>
+
+            <select id="pivotStrategy">
+                <option value="MOST_CONSTRAINED" selected>
+                    Étudiants les plus contraints d’abord
+                </option>
+                <option value="FIRST">Ordre initial</option>
+                <option value="RANDOM">Aléatoire</option>
+            </select>
+        </div>
+        <div style="padding-bottom: 10px;">
+            <button type="button" id="get_planning" >Proposer un nouveau planning pour cette semaine</button>
+            <span id="solveMessage" style="margin-left: 8px;"></span>
+        </div>
+
+        <div id="calendar-header">
+            <button id="prevWeekBtn">◀</button>
+            <span id="currentMondayLabel"></span>
+            <button id="nextWeekBtn">▶</button>
+        </div>
+
+        <div id="calendar-grid">
+            <div id="time-column">
+            </div>
+            <div class="day-column" data-day="MONDAY"></div>
+            <div class="day-column" data-day="TUESDAY"></div>
+            <div class="day-column" data-day="WEDNESDAY"></div>
+            <div class="day-column" data-day="THURSDAY"></div>
+            <div class="day-column" data-day="FRIDAY"></div>
+        </div>
+    </div>
+    <div id="groupsTableContainer" style="margin: 20px;">
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+            <thead>
+            <tr>
+                <th>Enseignement</th>
+                <th>Session</th>
+                <th>Groupe</th>
+                <th>Jour</th>
+                <th>Début</th>
+                <th>Fin</th>
+                <th>Effectif</th>
+                <th>Erreur</th>
+            </tr>
+            </thead>
+            <tbody id="groupsTableBody">
+            </tbody>
+        </table>
+    </div>
+</details>
+
+<details class="collapsible">
+    <summary>Répartition des étudiants</summary>
+    <div id="studentsTableContainer">
+        <table style="width:100%; border-collapse: separate; border-spacing: 0; border-top: 1px solid grey;">
+            <thead>
+            <tr>
+                <th style="position: absolute; left: 0; width: 60px;">ID</th>
+                <th style="position: absolute; left: 60px; width: 60px;">Prénom</th>
+                <th>Nom</th>
+                <th>UE suivies</th>
+            </tr>
+            </thead>
+            <tbody id="studentsTableBody">
+            </tbody>
+        </table>
+    </div>
+</details>
+
+<script src="/js/controls.js"></script>
+<script src="/js/utils.js"></script>
+<script src="/js/table.js"></script>
+<script src="/js/time.js"></script>
+<script src="/js/calendar.js"></script>
+<script>
+
+    let teachingUnits = [];
+    let teachings = [];
+    let students = [];
+    let teachers = [];
+    //all the events fixed so far
+    let allFixedEvents = [];
+    //the events in the current week displayed in the calendar
+    let currentWeekEvents = [];
+    let unitHues = {};
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        await bootstrapFromServer();
+    });
+
+    async function bootstrapFromServer() {
+
+        try {
+            const response = await fetch("/bootstrap", {
+                method: "POST"
+            });
+
+            const text = await response.text();
+
+            const data = JSON.parse(text);
+
+            console.log("Got bootstrap data...")
+            console.log(data)
+
+            firstMondayInSemester = new Date(data.settings.firstMondayInSemester);
+            firstMondayInSemester.setHours(0, 0, 0, 0);
+            lastMondayInSemester = new Date(data.settings.lastMondayInSemester);
+            lastMondayInSemester.setHours(0, 0, 0, 0);
+            currentMondayInSemester = new Date(data.settings.firstMondayInSemester);
+            currentMondayInSemester.setHours(0, 0, 0, 0);
+
+            teachingUnits = data.teachingUnits || [];
+
+            teachingUnits.forEach(ue => {
+                getHueForUnit(ue.id);
+                if (Array.isArray(ue.teachings)) {
+                    ue.teachings.forEach(t => {
+                        t.unitId = ue.id;
+                        t.startDate = getMondayFromWeekString(firstMondayInSemester, t.startDate)
+                        t.timeConstraints = []
+                        const weeksInSemester = getWeekCountBetweenMondays(firstMondayInSemester, lastMondayInSemester)
+                        //we make at first all the weeks and days available for teaching
+                        for (let week = 1; week <= weeksInSemester; week++) {
+                            ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"].forEach(day => {
+                                t.timeConstraints.push({
+                                    week:"S"+week,
+                                    day:day,
+                                    startMinutes:480,
+                                    endMinutes:1080
+                                })
+                            })
+                        }
+                        t.selected = false //allows to select or not the teaching to find a solution
+                        teachings.push(t);
+                    });
+                }
+            });
+            teachings = teachings.sort((a, b) => a.unitId.localeCompare(b.unitId))
+
+            students = data.students || [];
+            teachers = data.teachers || [];
+
+            generateStudentsTableHeaders(teachingUnits);
+
+            renderTeachingTable();
+            renderStudentsTable();
+            updateTeachingUnitSelect();
+            updateMondayLabel();
+
+        } catch (err) {
+            console.error("Bootstrap error:", err);
+        }
+    }
+
+    function buildSolvePayload() {
+
+        return {
+
+            teachings: teachings
+                    .filter(t => t.selected) // filter to keep only selected teachings (the teaching table allows to select/unselect them)
+                    .map(t => ({
+                        id: t.id,
+                        type: t.type,
+                        durationMinutes: t.durationMinutes,
+                        groupCapacity: t.groupCapacity,
+                        teacherCount: t.teacherCount,
+                        startDate: getWeekStringFromMonday(firstMondayInSemester, t.startDate),
+                        sessions: t.sessions,
+                        sessionsPerWeek: t.sessionsPerWeek,
+                        timeConstraints: t.timeConstraints,
+                        weeks: t.weeks
+                    })),
+
+            students: students.map(s => ({
+                id: s.id,
+                firstName: s.firstName,
+                lastName: s.lastName,
+                teachingUnitIds: s.teachingUnitIds
+            })),
+
+            allFixedEvents: allFixedEvents.filter(e => e.error === null ).map(e => ({
+                teachingId : e.teachingId,
+                groupId : e.groupId,
+                sessionId : e.sessionId,
+                week : e.week,
+                day : e.day,
+                startMinutes : e.startMinutes,
+                endMinutes : e.endMinutes,
+                studentIds : e.studentIds,
+                error : e.error,
+            })),
+
+            settings: {
+                pivotStrategy : document.getElementById("pivotStrategy").value,
+                currentMonday: formatDate(currentMondayInSemester),
+                currentWeek: getWeekStringFromMonday(firstMondayInSemester, currentMondayInSemester),
+                formerWeek: getWeekStringFromMonday(firstMondayInSemester, currentMondayInSemester),
+                firstMondayInSemester:formatDate(firstMondayInSemester),
+                lastMondayInSemester:formatDate(lastMondayInSemester)
+            }
+        };
+    }
+
+    document.getElementById("get_planning").addEventListener("click", async (event) => {
+        event.preventDefault();
+        allFixedEvents = [] //we reset the fixedEvents to restart from scratch if this button is clicked
+        sendSolvePayload()
+    });
+
+    async function sendSolvePayload() {
+        const msgEl = document.getElementById("solveMessage");
+        msgEl.textContent = "";
+
+        const payload =  buildSolvePayload();
+
+        console.log("payload")
+        console.log(payload)
+
+        const response = await fetch("/solve", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const solution = await response.json();
+
+        console.log("solution")
+        console.log(solution)
+
+        allFixedEvents = solution.allFixedEvents
+        currentWeekEvents = []
+        allFixedEvents.forEach(e => {
+            if (e.week === getWeekStringFromMonday(firstMondayInSemester, currentMondayInSemester)) //an event will be displayed in the calendar is inWeek
+                currentWeekEvents.push(e);
+            }
+        )
+        console.log("current week events")
+        console.log(currentWeekEvents)
+
+        const unAssignedEvents = currentWeekEvents.filter(e => e.error !== null && e.day == null).length
+        const assignedEventsWithErrors = currentWeekEvents.filter(e => e.error !== null && e.day !== null).length
+        let message = [];
+
+        if (unAssignedEvents > 0) {
+            message.push(`${unAssignedEvents} groupes non affichés car sans créneau`);
+        }
+
+        if (assignedEventsWithErrors > 0) {
+            message.push(`${assignedEventsWithErrors} groupes affichés en gris avec créneau mais en conflit`);
+        }
+
+        if (message.length > 0) {
+            msgEl.textContent = message.join(", ");
+            msgEl.style.color = "crimson";
+        }
+        else
+            msgEl.textContent = "";
+        renderGroupsTable()
+        renderCalendar()
+        fillStudentsGroups()
+    }
+
+</script>
+
+</body>
+</html>

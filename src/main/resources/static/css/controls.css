@@ -1,0 +1,139 @@
+button {
+    padding: 0.45rem 1rem;
+    font-size: 0.9rem;
+
+    border-radius: 6px;
+    border: 1px solid #2b7cff;
+
+    background-color: #2b7cff;
+    color: white;
+
+    cursor: pointer;
+
+    transition: background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.05s ease;
+
+    height: 2.2rem;
+    margin-top: 0.6rem;
+}
+
+/* Hover */
+button:hover {
+    background-color: #1f6ae0;
+    border-color: #1f6ae0;
+}
+
+/* Focus */
+button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(43, 124, 255, 0.25);
+}
+
+/* Active (clic) */
+button:active {
+    transform: scale(0.97);
+}
+
+/* Désactivé */
+button:disabled {
+    background-color: #ccc;
+    border-color: #ccc;
+    cursor: not-allowed;
+}
+
+pre {
+    background: #f4f4f4;
+    padding: 1rem;
+    max-height: 300px;
+    overflow: auto;
+}
+
+input,
+select {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.9rem;
+
+    border: 1px solid #ccc;
+    border-radius: 6px;
+
+    background-color: #ffffff;
+    color: #333;
+
+    transition: border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Hover */
+input:hover,
+select:hover {
+    border-color: #999;
+}
+
+/* Focus */
+input:focus,
+select:focus {
+    outline: none;
+    border-color: #2b7cff;
+    box-shadow: 0 0 0 3px rgba(43, 124, 255, 0.15);
+}
+
+/* Disabled */
+input:disabled,
+select:disabled {
+    background-color: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+}
+
+/* Petite largeur pour les nombres */
+input[type="number"] {
+    width: 5em;
+}
+
+/* Select un peu plus élégant */
+select {
+    appearance: none;          /* supprime style natif */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    background-image: url("data:image/svg+xml;utf8,<svg fill='%23333' height='12' viewBox='0 0 20 20' width='12' xmlns='http://www.w3.org/2000/svg'><path d='M5 7l5 5 5-5H5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 0.7rem;
+
+    padding-right: 2rem; /* espace pour flèche */
+}
+
+.collapsible {
+    margin-bottom: 1rem;
+    border: 1px solid #dce6ff;
+    border-radius: 8px;
+    padding: 0.5rem 0.8rem;
+    background-color: #f8fbff;
+}
+
+.collapsible summary {
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+    outline: none;
+    padding-bottom: 0.5rem;
+}
+
+.collapsible summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Petite flèche personnalisée */
+.collapsible summary::before {
+    content: "▶";
+    display: inline-block;
+    margin-right: 0.5rem;
+    transition: transform 0.2s ease;
+}
+
+.collapsible[open] summary::before {
+    transform: rotate(90deg);
+}

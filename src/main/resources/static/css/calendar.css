@@ -1,0 +1,49 @@
+#calendar-grid {
+    display: grid;
+    grid-template-columns: 60px repeat(5, 1fr);
+    height: 600px;
+    border:  2px solid #999;
+    box-shadow: 1px 0 0 rgba(0, 0, 0, 0.2);
+}
+
+#time-column {
+    border-right: 1px solid #ccc;
+    position: relative;
+    height: 100%;
+    border-right: 4px solid #999;
+    box-shadow: 1px 0 0 rgba(0, 0, 0, 0.2);
+}
+
+.hour-label {
+    position: absolute;
+    left: 5px;
+    transform: translateY(-50%);
+}
+
+.day-column {
+    position: relative;
+    border-right: 4px solid #999;
+    box-shadow: 1px 0 0 rgba(0, 0, 0, 0.2);
+}
+
+.calendar-event {
+    position: absolute;
+    left: 5%;
+    width: 90%;
+    color: white;
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 12px;
+    font-weight: 500;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    box-sizing: border-box;
+}
+
+#calendar-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1rem 0;
+    font-weight: bold;
+    justify-content: center;
+}

@@ -1,0 +1,181 @@
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+/* En-tête */
+th {
+    text-align: left;
+    padding: 0.6rem;
+    background-color: #f5f8ff;
+    border-bottom: 2px solid #dce6ff;
+}
+
+/* Cellules */
+td {
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid #eee;
+}
+
+/* Alternance bleu très clair */
+tbody tr:nth-child(even) {
+    background-color: #f2f7ff;  /* bleu très léger */
+}
+
+/* Hover subtil */
+tbody tr:hover {
+    background-color: #e6f0ff;
+}
+
+#teachingTableContainer {
+    max-height: 320px;
+    overflow-y: auto;
+    border: 0;
+}
+
+#teachingTableContainer thead th {
+    top: 0;
+    background: #f4f4f4;
+    position: sticky;
+    z-index: 2;
+}
+
+#teachingTableContainer th {
+    box-sizing: border-box;
+    border :0;
+}
+
+#teachingTableContainer td {
+    z-index: 1;
+    box-sizing: border-box;
+}
+
+.move-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 0;
+    margin: 0;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+}
+
+.move-button:disabled {
+    cursor: not-allowed;
+}
+
+
+.numeric-input {
+    width: 4em; /* Réduit la largeur */
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 0.2em;
+}
+
+.numeric-input:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+#timeConstraintsContainer {
+    overflow-x: auto;
+    width: 100%;
+    margin-top:10px;
+}
+
+#timeConstraintsTable {
+    border-collapse: collapse;
+    width: max-content;
+}
+
+#timeConstraintsTable th,
+#timeConstraintsTable td {
+    border: 1px solid black;
+    padding: 5px;
+    text-align: center;
+    min-width: 40px;
+    background-color: hsl(0, 65%, 80%);
+}
+
+#timeConstraintsTable td.selected {
+    background-color: hsl(120, 65%, 80%);
+}
+
+#timeConstraintsTable th {
+    cursor: pointer;
+    background-color: #f0f0f0;
+    position: sticky;
+    top: 0;
+}
+
+#timeConstraintsTable th:hover {
+    background-color: #e0e0e0;
+}
+
+#timeConstraintsTable th:first-child {
+    position: sticky;
+    left: 0;
+    background-color: white;
+    z-index: 1;
+}
+
+
+#studentsTableContainer {
+    overflow-x: auto;
+    width: 100%;
+    max-height: 320px;
+}
+
+#studentsTableContainer table {
+    width: max-content;
+    border-collapse: collapse;
+}
+
+#studentsTableContainer thead {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 2;
+    margin: 0;
+    padding:0;
+}
+
+#studentsTableContainer th button {
+    background: none;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0;
+    margin: 0 20px 0 20px ;
+}
+
+#studentsTableContainer th button:hover {
+    background-color: #f0f0f0;
+    border-radius: 3px;
+    padding:0;
+    margin: 0 20px 0 20px ;
+}
+
+#studentsTableContainer th,
+#studentsTableContainer td {
+    box-sizing: border-box;
+    min-width: 75px;
+    text-align: center;
+    padding: 5px;
+}
+
+#groupsTableContainer {
+    max-height: 320px;
+    overflow-y: auto;
+    border: 0;
+}
+
+#groupsTableContainer thead th {
+    position: sticky;
+    top: 0;
+    background: #f4f4f4;
+}
