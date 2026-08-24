@@ -101,6 +101,28 @@ function bindTeachingTableInputs() {
             });
         });
 
+    document.querySelectorAll(".start-date-input")
+        .forEach(input => {
+
+            input.addEventListener("change", e => {
+
+                const teachingId = e.target.dataset.teachingId;
+                let value = e.target.value;
+
+                const teaching =
+                    teachings.find(t => t.id === teachingId);
+
+                if (!teaching || typeof value !== "string" || !value.startsWith("S")) {
+                    e.target.value = teaching?.startDate ?? "S1";
+                    return;
+                }
+
+                teaching.startDate = value;
+                updateTeachingRow(teaching);
+                generateTimeConstraintsTable(teaching);
+            });
+        });
+
     document.querySelectorAll(".session-count-input")
         .forEach(input => {
 
@@ -254,7 +276,10 @@ function updateTeachingRow(teaching, index, totalTeachings) {
             class="numeric-input teacher-count-input"
            value="${teaching.teacherCount}"
            data-teaching-id="${teaching.id}"></td>
-        <td>${teaching.weeks[0]}</td>
+        <td><input type="text"
+            class="numeric-input start-date-input"
+           value="${teaching.weeks[0]}"
+           data-teaching-id="${teaching.id}"></td>
         <td>${teaching.weeks[weeksNeededInfo[0]-1-weeksNeededInfo[1]] + " (" + weeksNeededInfo[1] + " interruptions)"}</td>
         <td><input type="text"
             class="numeric-input session-count-input"
@@ -292,8 +317,8 @@ function updateTeachingRow(teaching, index, totalTeachings) {
         if (detailsElement && !detailsElement.open) {
             detailsElement.open = true;
         }
-
         generateTimeConstraintsTable(teaching);
+        lastSelectedTeaching = teaching;
     });
 
     if (row) {
@@ -305,7 +330,7 @@ function updateTeachingRow(teaching, index, totalTeachings) {
 }
 
 function generateTimeConstraintsTable(teaching) {
-    const startDate = new Date(teaching.startDate);
+    const startDate = new Date(getMondayFromWeekString(firstMondayInSemester, teaching.startDate));
 
     // Calculer le nombre de semaines nécessaires
     const weeksNeeded = getWeeksNeeded(teaching)[0];
@@ -359,11 +384,11 @@ function generateTimeConstraintsTable(teaching) {
     }
     thead.appendChild(headerRow2);
 
-    // Générer les lignes pour les créneaux horaires (8h00 à 18h00, par tranches de 30 minutes)
+    // Générer les lignes pour les créneaux horaires (8h00 à 20h00, par tranches de 30 minutes)
     const tbody = document.querySelector("#timeConstraintsTable tbody");
     tbody.innerHTML = "";
 
-    for (let hour = 8; hour < 18; hour++) {
+    for (let hour = 8; hour < 20; hour++) {
         for (let minute = 0; minute < 60; minute += 30) {
             const timeSlot = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}-${(minute+30 === 60 ? hour+1 : hour).toString().padStart(2, "0")}:${(minute+30 === 60 ? 0 : minute+30).toString().padStart(2, "0")}`;
             const timeInMinutes = hour * 60 + minute;

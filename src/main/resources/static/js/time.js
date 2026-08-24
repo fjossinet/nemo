@@ -24,7 +24,8 @@ function getWeekStringFromMonday(firstMondayAsDate, monday) {
     if (monday.getDay() !== 1) {
         throw new Error("La date fournie n'est pas un lundi.");
     }
-
+    firstMondayAsDate.setHours(0, 0, 0, 0)
+    monday.setHours(0, 0, 0, 0)
     const diffTime = monday.getTime() - firstMondayAsDate.getTime();
     const diffDays = diffTime / (1000 * 60 * 60 * 24);
     const weekNumber = Math.floor(diffDays / 7) + 1;
@@ -97,7 +98,7 @@ function getWeeksNeeded(teaching) {
     }
 
     //how many weeks do we need to reach to weeksNeeded with available weeks only?
-    const firstWeekForTeaching = parseInt(getWeekStringFromMonday(firstMondayInSemester, teaching.startDate).substring(1));
+    const firstWeekForTeaching = parseInt(teaching.startDate.substring(1));
     let totalWeeksCount = 0
     while (weeksCount < weeksNeeded) {
         //if at least one constraint with this week, then it's available

@@ -1,10 +1,6 @@
 const DAY_START = 8 * 60;
-const DAY_END = 18 * 60;
+const DAY_END = 20 * 60;
 const DAY_DURATION = DAY_END - DAY_START;
-
-let firstMondayInSemester; //a date object
-let lastMondayInSemester; //a date object
-let currentMondayInSemester; //a date object
 
 function updateMondayLabel() {
     const label = document.getElementById("currentMondayLabel");
@@ -20,20 +16,19 @@ function updateMondayLabel() {
 
 function refreshCalendar() {
     updateMondayLabel()
+    sendSolvePayload();
 }
 
 document.getElementById("prevWeekBtn")
     .addEventListener("click", () => {
         currentMondayInSemester.setDate(currentMondayInSemester.getDate() - 7);
         refreshCalendar();
-        sendSolvePayload();
     });
 
 document.getElementById("nextWeekBtn")
     .addEventListener("click", () => {
         currentMondayInSemester.setDate(currentMondayInSemester.getDate() + 7);
         refreshCalendar();
-        sendSolvePayload();
     });
 
 /**

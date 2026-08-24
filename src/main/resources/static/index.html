@@ -37,6 +37,27 @@
 <h1>Nemo – Gestionnaire des Unités d'Enseignement</h1>
 
 <details class="collapsible">
+    <summary>Semestre</summary>
+    <form id="semesterForm">
+        <fieldset>
+            <legend>Semestre</legend>
+
+            <label>
+                Premier lundi
+                <input type="date" id="firstMondayInSemester">
+            </label>
+
+            <label>
+                Dernier lundi
+                <input type="date" id="lastMondayInSemester">
+            </label>
+            <button type="button" id="updateSemesterMondays">Mettre à jour</button>
+            <span id="saveSettingsMessage" style="margin-left: 8px;"></span>
+        </fieldset>
+    </form>
+</details>
+
+<details class="collapsible">
     <summary>Création d'une nouvelle UE</summary>
 <form id="nemoForm">
     <fieldset>
@@ -130,6 +151,10 @@
             </thead>
             <tbody id="teachingTableBody"></tbody>
         </table>
+    </div>
+    <div style="margin-bottom: 10px;">
+        <button type="button" id="saveTeachingUnitsBtn">Sauvegarder les UEs avec les contraintes</button>
+        <span id="saveMessage" style="margin-left: 8px;"></span>
     </div>
 
 </details>
@@ -239,6 +264,7 @@
 
     let teachingUnits = [];
     let teachings = [];
+    let lastSelectedTeaching = null;
     let students = [];
     let teachers = [];
     //all the events fixed so far
@@ -272,6 +298,9 @@
             currentMondayInSemester = new Date(data.settings.firstMondayInSemester);
             currentMondayInSemester.setHours(0, 0, 0, 0);
 
+            document.getElementById("firstMondayInSemester").value = formatDate(firstMondayInSemester);
+            document.getElementById("lastMondayInSemester").value = formatDate(lastMondayInSemester);
+
             teachingUnits = data.teachingUnits || [];
 
             teachingUnits.forEach(ue => {
@@ -279,19 +308,22 @@
                 if (Array.isArray(ue.teachings)) {
                     ue.teachings.forEach(t => {
                         t.unitId = ue.id;
-                        t.startDate = getMondayFromWeekString(firstMondayInSemester, t.startDate)
-                        t.timeConstraints = []
-                        const weeksInSemester = getWeekCountBetweenMondays(firstMondayInSemester, lastMondayInSemester)
-                        //we make at first all the weeks and days available for teaching
-                        for (let week = 1; week <= weeksInSemester; week++) {
-                            ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"].forEach(day => {
-                                t.timeConstraints.push({
-                                    week:"S"+week,
-                                    day:day,
-                                    startMinutes:480,
-                                    endMinutes:1080
-                                })
-                            })
+                        //t.startDate = getMondayFromWeekString(firstMondayInSemester, t.startDate)
+                        // Si des contraintes existent déjà (chargées depuis le JSON), on les conserve
+                        if (!t.timeConstraints || t.timeConstraints.length === 0) {
+                            // Sinon, on génère les contraintes par défaut
+                            const weeksInSemester = getWeekCountBetweenMondays(firstMondayInSemester, lastMondayInSemester);
+                            t.timeConstraints = [];
+                            for (let week = 1; week <= weeksInSemester; week++) {
+                                ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"].forEach(day => {
+                                    t.timeConstraints.push({
+                                        week: "S" + week,
+                                        day: day,
+                                        startMinutes: 480,
+                                        endMinutes: 1200
+                                    });
+                                });
+                            }
                         }
                         t.selected = false //allows to select or not the teaching to find a solution
                         teachings.push(t);
@@ -299,6 +331,7 @@
                 }
             });
             teachings = teachings.sort((a, b) => a.unitId.localeCompare(b.unitId))
+            teachingUnits = teachingUnits.sort((a, b) => a.id.localeCompare(b.id))
 
             students = data.students || [];
             teachers = data.teachers || [];
@@ -315,7 +348,7 @@
         }
     }
 
-    function buildSolvePayload() {
+    function buildPayload() {
 
         return {
 
@@ -327,7 +360,7 @@
                         durationMinutes: t.durationMinutes,
                         groupCapacity: t.groupCapacity,
                         teacherCount: t.teacherCount,
-                        startDate: getWeekStringFromMonday(firstMondayInSemester, t.startDate),
+                        startDate: t.startDate,
                         sessions: t.sessions,
                         sessionsPerWeek: t.sessionsPerWeek,
                         timeConstraints: t.timeConstraints,
@@ -374,7 +407,7 @@
         const msgEl = document.getElementById("solveMessage");
         msgEl.textContent = "";
 
-        const payload =  buildSolvePayload();
+        const payload =  buildPayload();
 
         console.log("payload")
         console.log(payload)
@@ -423,6 +456,95 @@
         renderGroupsTable()
         renderCalendar()
         fillStudentsGroups()
+    }
+
+    async function saveTeachingUnits() {
+        const msgEl = document.getElementById("saveMessage");
+        msgEl.textContent = "";
+
+        try {
+            const response = await savePayload()
+            if (response.ok) {
+                msgEl.textContent = "Sauvegarde réussie !";
+                msgEl.style.color = "green";
+                console.log("Save successful");
+            } else {
+                msgEl.textContent = "Erreur lors de la sauvegarde";
+                msgEl.style.color = "crimson";
+                console.error("Save failed:", await response.text());
+            }
+        } catch (err) {
+            msgEl.textContent = "Erreur réseau: " + err.message;
+            msgEl.style.color = "crimson";
+            console.error("Save error:", err);
+        }
+    }
+
+    async function saveSettings() {
+        const msgEl = document.getElementById("saveSettingsMessage");
+        msgEl.textContent = "";
+
+        try {
+            const response = await savePayload()
+            if (response.ok) {
+                msgEl.textContent = "Sauvegarde réussie !";
+                msgEl.style.color = "green";
+                console.log("Save successful");
+            } else {
+                msgEl.textContent = "Erreur lors de la sauvegarde";
+                msgEl.style.color = "crimson";
+                console.error("Save failed:", await response.text());
+            }
+        } catch (err) {
+            msgEl.textContent = "Erreur réseau: " + err.message;
+            msgEl.style.color = "crimson";
+            console.error("Save error:", err);
+        }
+    }
+
+    async function savePayload() {
+        const payload = {
+
+            teachingUnits: teachingUnits.map(ue => ({
+                id: ue.id,
+                name: ue.name,
+                teachings: teachings
+                    .filter(t => t.unitId === ue.id)
+                    .map(t => ({
+                        id: t.id,
+                        type: t.type,
+                        durationMinutes: t.durationMinutes,
+                        groupCapacity: t.groupCapacity,
+                        teacherCount: t.teacherCount,
+                        startDate: t.startDate,
+                        sessions: t.sessions,
+                        sessionsPerWeek: t.sessionsPerWeek,
+                        timeConstraints: t.timeConstraints,
+                        weeks: t.weeks
+                    }))
+            })),
+
+            settings: {
+                pivotStrategy : document.getElementById("pivotStrategy").value,
+                currentMonday: formatDate(currentMondayInSemester),
+                currentWeek: getWeekStringFromMonday(firstMondayInSemester, currentMondayInSemester),
+                formerWeek: getWeekStringFromMonday(firstMondayInSemester, currentMondayInSemester),
+                firstMondayInSemester:formatDate(firstMondayInSemester),
+                lastMondayInSemester:formatDate(lastMondayInSemester)
+            }
+        };
+
+        console.log("Save payload:");
+        console.log(payload);
+
+        return await fetch("/save", {
+            method: "POST",
+            headers: {
+                "Content-Type": "sapplication/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
     }
 
 </script>
