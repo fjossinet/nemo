@@ -3,6 +3,7 @@ const DAY_END = 20 * 60;
 const DAY_DURATION = DAY_END - DAY_START;
 
 function initCalendar() {
+    updateSelectedTeachingsCount();
     document.getElementById("get_planning").addEventListener("click", async (event) => {
         event.preventDefault();
         allFixedEvents = [] //we reset the fixedEvents to restart from scratch if this button is clicked

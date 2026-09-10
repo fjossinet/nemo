@@ -57,6 +57,14 @@ function initUEs() {
     renderTeachingTable();
 }
 
+function updateSelectedTeachingsCount() {
+    const count = teachings.filter(t => t.selected).length;
+    const el = document.getElementById("selectedTeachingsCount");
+    if (el) {
+        el.textContent = count + " enseignement(s) s\u00e9lectionn\u00e9(s)";
+    }
+}
+
 function bindTeachingTableInputs() {
 
     // Écouteur pour la case à cocher "Tout sélectionner"
@@ -74,6 +82,7 @@ function bindTeachingTableInputs() {
                     teaching.selected = isChecked;
                 }
             });
+            updateSelectedTeachingsCount();
         });
     }
 
@@ -85,6 +94,7 @@ function bindTeachingTableInputs() {
             if (teaching) {
                 teaching.selected = e.target.checked;
             }
+            updateSelectedTeachingsCount();
         });
     });
 
@@ -283,6 +293,7 @@ function renderTeachingTable() {
             updateTeachingRow(teaching, index, teachings.length);
         });
     bindTeachingTableInputs();
+    updateSelectedTeachingsCount();
 }
 
 function updateTeachingRow(teaching, index, totalTeachings) {
