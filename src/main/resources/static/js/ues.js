@@ -1,3 +1,62 @@
+function initUEs() {
+    document.getElementById("addUEBtn").addEventListener("click", () => {
+
+        const id = document.getElementById("ueId").value;
+        const name = document.getElementById("ueName").value;
+
+        if (!id || !name) {
+            alert("UE incomplète");
+            return;
+        }
+
+        teachingUnits.push({
+            id: id,
+            name: name,
+            teachings: []
+        });
+
+        updateTeachingUnitSelect();
+    });
+
+    document.getElementById("addTeachingBtn").addEventListener("click", () => {
+
+        const unitId = document.getElementById("teachingUnitSelect").value;
+
+        if (!unitId) {
+            alert("Sélectionnez une UE");
+            return;
+        }
+
+        const type = document.getElementById("teachingType").value;
+
+        const ue = teachingUnits.find(u => u.id === unitId);
+
+        const teaching = {
+            id: `${unitId}-${type}`,
+            unitId: unitId,
+            type: type,
+            sessions: Number(document.getElementById("sessions").value),
+            startDate: document.getElementById("startDate").value,
+            durationMinutes: Number(document.getElementById("duration").value),
+            groupCapacity: Number(document.getElementById("groupCapacity").value),
+            teacherCount: Number(document.getElementById("teacherCount").value)
+        };
+
+        ue.teachings.push(teaching);
+        teachings.push(teaching);
+
+        renderTeachingTable();
+    });
+
+    document.getElementById("saveTeachingUnitsBtn").addEventListener("click", async (event) => {
+        event.preventDefault();
+        await saveTeachingUnits();
+    });
+
+    updateTeachingUnitSelect();
+    renderTeachingTable();
+}
+
 function bindTeachingTableInputs() {
 
     // Écouteur pour la case à cocher "Tout sélectionner"
@@ -198,6 +257,21 @@ function moveTeachingDown(index) {
         [teachings[index], teachings[index + 1]] = [teachings[index + 1], teachings[index]];
         renderTeachingTable();
     }
+}
+
+function updateTeachingUnitSelect() {
+
+    const select = document.getElementById("teachingUnitSelect");
+
+    // On garde la première option
+    select.innerHTML = `<option value="">— sélectionner une UE —</option>`;
+
+    teachingUnits.forEach(ue => {
+        const option = document.createElement("option");
+        option.value = ue.id;
+        option.textContent = `${ue.id} — ${ue.name}`;
+        select.appendChild(option);
+    });
 }
 
 function renderTeachingTable() {
@@ -546,145 +620,6 @@ function updateTimeConstraints(teaching) {
 
 }
 
-function generateStudentsTableHeaders(teachingUnits) {
-    const thead = document.querySelector("#studentsTableContainer thead");
-    thead.innerHTML = "";
-    // Ligne 1 : En-têtes fixes et titres des UEs
-    const headerRow1 = document.createElement("tr");
-
-    const thId = document.createElement("th");
-    thId.textContent = "ID";
-    thId.style.position = "sticky";
-    thId.style.left = "0";
-    thId.style.background = "white";
-    thId.style.zIndex = "1";
-    headerRow1.appendChild(thId);
-
-    const thFirstName = document.createElement("th");
-    thFirstName.textContent = "Prénom";
-    thFirstName.style.position = "sticky";
-    thFirstName.style.left = "75px";
-    thFirstName.style.background = "white";
-    thFirstName.style.zIndex = "1";
-    headerRow1.appendChild(thFirstName);
-
-    const thLastName = document.createElement("th");
-    thLastName.textContent = "Nom";
-    thLastName.style.position = "sticky";
-    thLastName.style.left = "150px";
-    thLastName.style.background = "white";
-    thLastName.style.zIndex = "1";
-    headerRow1.appendChild(thLastName);
-
-    // Ajouter les colonnes pour chaque UE
-    teachingUnits.forEach(ue => {
-        const thUE = document.createElement("th");
-        thUE.id = ue.id;
-        thUE.colSpan = 5;
-        thUE.style.textAlign = "center";
-        const hue = getHueForUnit(ue.id);
-        thUE.style.backgroundColor = `hsl(${hue}, 65%, 85%)`;
-        thUE.style.borderStyle = "solid";
-        thUE.style.borderWidth = "2px";
-        thUE.style.borderColor = `hsl(${hue}, 65%, 45%)`;
-
-        // Bouton gauche
-        const leftButton = document.createElement("button");
-        leftButton.innerHTML = "&larr;";
-        leftButton.style.color = `hsl(${hue}, 65%, 35%)`;
-        leftButton.onclick = () => moveUEColumn(getUEHeaderIndex(ue.id), getUEHeaderIndex(ue.id) -1);
-
-        // Texte de l'UE
-        const ueText = document.createElement("span");
-        ueText.textContent = ue.id;
-        ueText.style.color = `hsl(${hue}, 65%, 35%)`;
-        ueText.style.fontWeight = "bold";
-
-        // Bouton droit
-        const rightButton = document.createElement("button");
-        rightButton.innerHTML = "&rarr;";
-        rightButton.style.color = `hsl(${hue}, 65%, 35%)`;
-        rightButton.onclick = () => moveUEColumn(getUEHeaderIndex(ue.id), getUEHeaderIndex(ue.id) + 1);
-
-        thUE.appendChild(leftButton);
-        thUE.appendChild(ueText);
-        thUE.appendChild(rightButton);
-
-        headerRow1.appendChild(thUE);
-    });
-
-    thead.appendChild(headerRow1);
-
-    // Ligne 2 : Sous-en-têtes pour les types d'enseignement
-    const headerRow2 = document.createElement("tr");
-
-    const thIdEmpty = document.createElement("th");
-    thIdEmpty.style.position = "sticky";
-    thIdEmpty.style.left = "0";
-    thIdEmpty.style.background = "white";
-    thIdEmpty.style.zIndex = "1";
-    headerRow2.appendChild(thIdEmpty);
-
-    const thFirstNameEmpty = document.createElement("th");
-    thFirstNameEmpty.style.position = "sticky";
-    thFirstNameEmpty.style.left = "75px";
-    thFirstNameEmpty.style.background = "white";
-    thFirstNameEmpty.style.zIndex = "1";
-    headerRow2.appendChild(thFirstNameEmpty);
-
-    const thLastNameEmpty = document.createElement("th");
-    thLastNameEmpty.style.position = "sticky";
-    thLastNameEmpty.style.left = "150px";
-    thLastNameEmpty.style.background = "white";
-    thLastNameEmpty.style.zIndex = "1";
-    headerRow2.appendChild(thLastNameEmpty);
-
-    // Ajouter les sous-colonnes pour chaque type d'enseignement
-    teachingUnits.forEach(ue => {
-        ["Inscrit", "CM", "CI", "TD", "TP"].forEach(type => {
-            const thType = document.createElement("th");
-            thType.textContent = type;
-            thType.style.cursor = "pointer";
-            thType.onclick = () => sortStudentsTableByType(ue.id, type);
-            headerRow2.appendChild(thType);
-        });
-    });
-
-    thead.appendChild(headerRow2);
-}
-
-function sortStudentsTableByType(ueId, type) {
-
-    const ueIndex = getUEHeaderIndex(ueId)
-    const typeIndex = ["Inscrit", "CM", "CI", "TD", "TP"].indexOf(type);
-
-    const tbody = document.getElementById("studentsTableBody");
-    const rows = Array.from(tbody.querySelectorAll("tr"));
-
-    rows.sort((rowA, rowB) => {
-        const cellA = rowA.querySelector(`td:nth-child(${5 * (ueIndex-3) + 4 + typeIndex})`);
-        const cellB = rowB.querySelector(`td:nth-child(${5 * (ueIndex-3) + 4 + typeIndex})`);
-        const valueA = cellA.textContent;
-        const valueB = cellB.textContent;
-
-        // Logique de tri
-        if (type === "Inscrit") {
-            // Tri par "X" ou vide
-            if (valueA === "X" && valueB !== "X") return -1;
-            if (valueA !== "X" && valueB === "X") return 1;
-            return 0;
-        } else {
-            // Tri par numéro de groupe
-            if (valueA === "" && valueB !== "") return 1;
-            if (valueA !== "" && valueB === "") return -1;
-            return valueA.localeCompare(valueB);
-        }
-    });
-
-    // Réorganiser les lignes
-    rows.forEach(row => tbody.appendChild(row));
-}
-
 function getUEHeaderIndex(ueId) {
     const headers = Array.from(document.querySelectorAll("#studentsTableContainer thead tr:nth-child(1) th"));
     return headers.findIndex(header => header.id === ueId);
@@ -742,110 +677,5 @@ function moveUEColumn(fromUEIndex, toUEIndex) {
                 row.insertBefore(cell, cells[(toUEIndex+1-3) * 5-5+3]);
             }
         });
-    });
-}
-
-function renderStudentsTable() {
-    const tbody = document.getElementById("studentsTableBody");
-    tbody.innerHTML = "";
-
-    students.forEach(student => {
-        const tr = document.createElement("tr");
-
-        // Colonnes fixes
-        const tdId = document.createElement("td");
-        tdId.textContent = student.id;
-        tdId.style.position = "sticky";
-        tdId.style.left = "0";
-        tdId.style.background = "white";
-        tr.appendChild(tdId);
-
-        const tdFirstName = document.createElement("td");
-        tdFirstName.textContent = student.firstName;
-        tdFirstName.style.position = "sticky";
-        tdFirstName.style.left = "75px";
-        tdFirstName.style.background = "white";
-        tr.appendChild(tdFirstName);
-
-        const tdLastName = document.createElement("td");
-        tdLastName.textContent = student.lastName;
-        tdLastName.style.position = "sticky";
-        tdLastName.style.left = "150px";
-        tdLastName.style.background = "white";
-        tr.appendChild(tdLastName);
-
-        teachingUnits.forEach(ue => {
-            ["Inscrit", "CM", "CI", "TD", "TP"].forEach(type => {
-                const td = document.createElement("td");
-                if (type === "Inscrit" && student.teachingUnitIds.includes(ue.id)) {
-                    td.textContent = "X";
-                } else {
-                    td.textContent = "";
-                    td.classList.add("student-group-cell");
-                    td.id = `${student.id}-${ue.id}-${type}`;
-                }
-                tr.appendChild(td);
-            });
-        });
-
-        tbody.appendChild(tr);
-    });
-}
-
-function fillStudentsGroups() {
-    //we first reset all the group cells
-    const cells = document.querySelectorAll(".student-group-cell");
-    cells.forEach(cell => {
-        cell.textContent = "";
-    });
-    allFixedEvents.forEach(e => {
-        e.studentIds.forEach(studentId => {
-            const cell = document.getElementById(`${studentId}-${e.teachingId}`);
-            cell.textContent = e.groupId;
-        })
-
-    })
-}
-
-function renderGroupsTable() {
-    const tbody = document.getElementById("groupsTableBody");
-    tbody.innerHTML = "";
-
-    currentWeekEvents.sort((a, b) => {
-        const t = a.teachingId.localeCompare(b.teachingId);
-        if (t !== 0) return t;
-
-        if (a.day === null) return -1;
-        if (b.day === null) return -1;
-        return a.day.localeCompare(b.day);
-    }).forEach(e => {
-        const tr = document.createElement("tr");
-        const hue = getHueForUnit(e.teachingId.split("-")[0]);
-        tr.classList.add("group-row");
-        tr.classList.add("group-row-" + (
-            e.day == null ? "weekend" :
-            e.day.toLowerCase()
-        ))
-        if (e.error !== null && e.day !==null) {
-            tr.style.backgroundColor = `hsl(0, 0%, 55%)`
-            tr.style.color = `white`;
-        } else {
-            tr.style.backgroundColor = `hsl(${hue}, 65%, 85%)`;
-        }
-        tr.setAttribute("data-group-id", `${e.teachingId}-${e.sessionId}-${e.groupId}`);
-        tr.addEventListener("click", () => {
-
-        });
-        tr.innerHTML = `
-            <td>${e.teachingId}</td>
-            <td>${e.sessionId}</td>
-            <td>${e.groupId}</td>
-            <td>${e.day ?? ""}</td>
-            <td>${e.startMinutes == null ? "" : minutesToTime(e.startMinutes)}</td>
-            <td>${e.endMinutes == null ? "" : minutesToTime(e.endMinutes)}</td>
-            <td>${e.studentIds.length}</td>
-            <td>${e.error ?? ""}</td>
-        `;
-        tbody.appendChild(tr);
     });
 }

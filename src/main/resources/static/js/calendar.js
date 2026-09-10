@@ -2,6 +2,85 @@ const DAY_START = 8 * 60;
 const DAY_END = 20 * 60;
 const DAY_DURATION = DAY_END - DAY_START;
 
+function initCalendar() {
+    document.getElementById("get_planning").addEventListener("click", async (event) => {
+        event.preventDefault();
+        allFixedEvents = [] //we reset the fixedEvents to restart from scratch if this button is clicked
+        await sendSolvePayload()
+    });
+
+    document.getElementById("prevWeekBtn")
+        .addEventListener("click", () => {
+            currentMondayInSemester.setDate(currentMondayInSemester.getDate() - 7);
+            refreshCalendar();
+        });
+
+    document.getElementById("nextWeekBtn")
+        .addEventListener("click", () => {
+            currentMondayInSemester.setDate(currentMondayInSemester.getDate() + 7);
+            refreshCalendar();
+        });
+
+    updateMondayLabel();
+
+    renderHours();
+}
+
+async function sendSolvePayload() {
+    const msgEl = document.getElementById("solveMessage");
+    msgEl.textContent = "";
+
+    const payload =  buildPayload();
+
+    console.log("payload")
+    console.log(payload)
+
+    const response = await fetch("/solve", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    });
+
+    const solution = await response.json();
+
+    console.log("solution")
+    console.log(solution)
+
+    allFixedEvents = solution.allFixedEvents
+    currentWeekEvents = []
+    allFixedEvents.forEach(e => {
+            if (e.week === getWeekStringFromMonday(firstMondayInSemester, currentMondayInSemester)) //an event will be displayed in the calendar is inWeek
+                currentWeekEvents.push(e);
+        }
+    )
+    console.log("current week events")
+    console.log(currentWeekEvents)
+
+    const unAssignedEvents = currentWeekEvents.filter(e => e.error !== null && e.day == null).length
+    const assignedEventsWithErrors = currentWeekEvents.filter(e => e.error !== null && e.day !== null).length
+    let message = [];
+
+    if (unAssignedEvents > 0) {
+        message.push(`${unAssignedEvents} groupes non affichés car sans créneau`);
+    }
+
+    if (assignedEventsWithErrors > 0) {
+        message.push(`${assignedEventsWithErrors} groupes affichés en gris avec créneau mais en conflit`);
+    }
+
+    if (message.length > 0) {
+        msgEl.textContent = message.join(", ");
+        msgEl.style.color = "crimson";
+    }
+    else
+        msgEl.textContent = "";
+    renderGroupsTable()
+    renderCalendar()
+    fillStudentsGroups()
+}
+
 function updateMondayLabel() {
     const label = document.getElementById("currentMondayLabel");
 
@@ -19,24 +98,10 @@ function refreshCalendar() {
     sendSolvePayload();
 }
 
-document.getElementById("prevWeekBtn")
-    .addEventListener("click", () => {
-        currentMondayInSemester.setDate(currentMondayInSemester.getDate() - 7);
-        refreshCalendar();
-    });
-
-document.getElementById("nextWeekBtn")
-    .addEventListener("click", () => {
-        currentMondayInSemester.setDate(currentMondayInSemester.getDate() + 7);
-        refreshCalendar();
-    });
-
 /**
  * The calendar displayed the inWeekEvents
  */
 function renderCalendar() {
-
-    renderHours();
 
     document.querySelectorAll(".day-column")
         .forEach(c => c.innerHTML = "");
@@ -151,6 +216,49 @@ function renderHours() {
 
         column.appendChild(label);
     }
+}
+
+function renderGroupsTable() {
+    const tbody = document.getElementById("groupsTableBody");
+    tbody.innerHTML = "";
+
+    currentWeekEvents.sort((a, b) => {
+        const t = a.teachingId.localeCompare(b.teachingId);
+        if (t !== 0) return t;
+
+        if (a.day === null) return -1;
+        if (b.day === null) return -1;
+        return a.day.localeCompare(b.day);
+    }).forEach(e => {
+        const tr = document.createElement("tr");
+        const hue = getHueForUnit(e.teachingId.split("-")[0]);
+        tr.classList.add("group-row");
+        tr.classList.add("group-row-" + (
+            e.day == null ? "weekend" :
+                e.day.toLowerCase()
+        ))
+        if (e.error !== null && e.day !==null) {
+            tr.style.backgroundColor = `hsl(0, 0%, 55%)`
+            tr.style.color = `white`;
+        } else {
+            tr.style.backgroundColor = `hsl(${hue}, 65%, 85%)`;
+        }
+        tr.setAttribute("data-group-id", `${e.teachingId}-${e.sessionId}-${e.groupId}`);
+        tr.addEventListener("click", () => {
+
+        });
+        tr.innerHTML = `
+            <td>${e.teachingId}</td>
+            <td>${e.sessionId}</td>
+            <td>${e.groupId}</td>
+            <td>${e.day ?? ""}</td>
+            <td>${e.startMinutes == null ? "" : minutesToTime(e.startMinutes)}</td>
+            <td>${e.endMinutes == null ? "" : minutesToTime(e.endMinutes)}</td>
+            <td>${e.studentIds.length}</td>
+            <td>${e.error ?? ""}</td>
+        `;
+        tbody.appendChild(tr);
+    });
 }
 
 function clusterEvents(events) {

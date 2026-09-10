@@ -1,0 +1,139 @@
+<details class="collapsible">
+    <summary>Création d'une nouvelle UE</summary>
+    <form id="nemoForm">
+        <fieldset>
+            <legend>Description Unité d'Enseignement</legend>
+
+            <label>
+                UE ID
+                <input type="text" id="ueId" value="TU1" required />
+            </label>
+
+            <label>
+                Nom
+                <input type="text" id="ueName" value="Algorithmique" required />
+            </label>
+            <button type="button" id="addUEBtn">Ajouter l’UE</button>
+        </fieldset>
+
+        <fieldset>
+            <legend>Description Enseignement</legend>
+
+            <label>
+                UE ID
+                <select id="teachingUnitSelect">
+                    <option value="">— sélectionner une UE —</option>
+                </select>
+            </label>
+
+            <label>
+                Type
+                <select id="teachingType">
+                    <option value="CM">CM</option>
+                    <option value="TD">TD</option>
+                    <option value="TP">TP</option>
+                </select>
+            </label>
+
+            <label>
+                Date de début
+                <input type="date" id="startDate">
+            </label>
+
+            <label>
+                Sessions
+                <input type="number"
+                       id="sessions"
+                       min="1"
+                       step="1"
+                       value="12"
+                       required>
+            </label>
+
+            <label>
+                Durée (minutes)
+                <input type="number" id="duration" value="120" />
+            </label>
+
+            <label>
+                Capacité par groupe
+                <input type="number" id="groupCapacity" value="20" />
+            </label>
+
+            <label>
+                Nombre d'enseignants
+                <input type="number" id="teacherCount" value="1" />
+            </label>
+            <button type="button" id="addTeachingBtn">Ajouter l'enseignement</button>
+        </fieldset>
+    </form>
+</details>
+
+<details class="collapsible" open>
+    <summary>Détails des UEs</summary>
+    <div id="teachingTableContainer">
+        <div id="teachingSelectionCount" style="margin-bottom: 5px; font-weight: bold;">0 enseignement(s) sélectionné(s)</div>
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+            <thead>
+            <tr>
+                <th></th> <!-- column for up/down arrows -->
+                <th><input type="checkbox" id="selectAllTeachings" checked></th>
+                <th>UE</th>
+                <th>Type</th>
+                <th>Capacité par groupe</th>
+                <th>Enseignants</th>
+                <th>Début</th>
+                <th>Fin</th>
+                <th>Sessions totales</th>
+                <th>Sessions/semaine</th>
+                <th>Durée (minutes)</th>
+                <th>Etudiants</th>
+                <th>Groupes</th>
+            </tr>
+            </thead>
+            <tbody id="teachingTableBody"></tbody>
+        </table>
+    </div>
+    <div style="margin-bottom: 10px;">
+        <button type="button" id="saveTeachingUnitsBtn">Sauvegarder les UEs avec les contraintes</button>
+        <span id="saveMessage" style="margin-left: 8px;"></span>
+    </div>
+
+</details>
+
+<details class="collapsible" id="timeConstraints">
+    <summary>Contraintes de temps</summary>
+    <div id="timeConstraintsContainer">
+        <table id="timeConstraintsTable">
+            <thead>
+            <tr>
+                <th></th>
+                <!-- Colonnes pour les semaines -->
+            </tr>
+            <tr>
+                <th></th>
+                <!-- Sous-en-têtes pour les jours de la semaine -->
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Lignes pour les créneaux horaires -->
+            </tbody>
+        </table>
+    </div>
+</details>
+
+<details class="collapsible">
+    <summary>Groupes</summary>
+    <div id="groupsPerTeachingTableContainer" style="margin: 20px;">
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+            <thead>
+            <tr>
+                <th>Groupe</th>
+                <th>Effectif</th>
+            </tr>
+            </thead>
+            <tbody id="groupsPerTeachingTableBody">
+            </tbody>
+        </table>
+    </div>
+</details>

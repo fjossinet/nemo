@@ -29,6 +29,54 @@
             margin-top: 0.6rem;
         }
 
+        .tab-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            padding: 0;
+        }
+
+        .tabs {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            background-color: #f1f1f1;
+        }
+
+        .tabs li {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #ddd;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .tabs li.active {
+            background-color: #2b7cff;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            flex: 1;
+            overflow: auto;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tab-content > * {
+            flex: 1;
+        }
+
     </style>
 </head>
 
@@ -40,8 +88,6 @@
     <summary>Semestre</summary>
     <form id="semesterForm">
         <fieldset>
-            <legend>Semestre</legend>
-
             <label>
                 Premier lundi
                 <input type="date" id="firstMondayInSemester">
@@ -57,209 +103,30 @@
     </form>
 </details>
 
-<details class="collapsible">
-    <summary>Création d'une nouvelle UE</summary>
-<form id="nemoForm">
-    <fieldset>
-        <legend>Description Unité d'Enseignement</legend>
+<div class="tab-container">
+    <ul class="tabs">
+        <li class="active" onclick="openTab('etudiants')">Étudiants</li>
+        <li onclick="openTab('ues')">UEs</li>
+        <li onclick="openTab('calendrier')">Calendrier</li>
+    </ul>
 
-        <label>
-            UE ID
-            <input type="text" id="ueId" value="TU1" required />
-        </label>
-
-        <label>
-            Nom
-            <input type="text" id="ueName" value="Algorithmique" required />
-        </label>
-        <button type="button" id="addUEBtn">Ajouter l’UE</button>
-    </fieldset>
-
-    <fieldset>
-        <legend>Description Enseignement</legend>
-
-        <label>
-            UE ID
-            <select id="teachingUnitSelect">
-                <option value="">— sélectionner une UE —</option>
-            </select>
-        </label>
-
-        <label>
-            Type
-            <select id="teachingType">
-                <option value="CM">CM</option>
-                <option value="TD">TD</option>
-                <option value="TP">TP</option>
-            </select>
-        </label>
-
-        <label>
-            Date de début
-            <input type="date" id="startDate">
-        </label>
-
-        <label>
-            Sessions
-            <input type="number"
-                   id="sessions"
-                   min="1"
-                   step="1"
-                   value="12"
-                   required>
-        </label>
-
-        <label>
-            Durée (minutes)
-            <input type="number" id="duration" value="120" />
-        </label>
-
-        <label>
-            Capacité par groupe
-            <input type="number" id="groupCapacity" value="20" />
-        </label>
-
-        <label>
-            Nombre d'enseignants
-            <input type="number" id="teacherCount" value="1" />
-        </label>
-        <button type="button" id="addTeachingBtn">Ajouter l'enseignement</button>
-    </fieldset>
-</form>
-</details>
-
-<details class="collapsible" open>
-    <summary>Détails et configuration des UEs</summary>
-    <div id="teachingTableContainer">
-        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
-            <thead>
-                <tr>
-                    <th></th> <!-- column for up/down arrows -->
-                    <th><input type="checkbox" id="selectAllTeachings" checked></th>
-                    <th>UE</th>
-                    <th>Type</th>
-                    <th>Capacité par groupe</th>
-                    <th>Enseignants</th>
-                    <th>Début</th>
-                    <th>Fin</th>
-                    <th>Sessions totales</th>
-                    <th>Sessions/semaine</th>
-                    <th>Durée (minutes)</th>
-                    <th>Etudiants</th>
-                    <th>Groupes</th>
-                </tr>
-            </thead>
-            <tbody id="teachingTableBody"></tbody>
-        </table>
-    </div>
-    <div style="margin-bottom: 10px;">
-        <button type="button" id="saveTeachingUnitsBtn">Sauvegarder les UEs avec les contraintes</button>
-        <span id="saveMessage" style="margin-left: 8px;"></span>
+    <div id="etudiants" class="tab-content active">
     </div>
 
-</details>
-
-<details class="collapsible" id="timeConstraints">
-    <summary>Contraintes de temps</summary>
-    <div id="timeConstraintsContainer">
-        <table id="timeConstraintsTable">
-            <thead>
-            <tr>
-                <th></th>
-                <!-- Colonnes pour les semaines -->
-            </tr>
-            <tr>
-                <th></th>
-                <!-- Sous-en-têtes pour les jours de la semaine -->
-            </tr>
-            </thead>
-            <tbody>
-            <!-- Lignes pour les créneaux horaires -->
-            </tbody>
-        </table>
+    <div id="ues" class="tab-content">
     </div>
-</details>
 
-<details class="collapsible">
-    <summary>Calendrier</summary>
-    <div style="margin: 20px;">
-        <div class="pivot-row">
-            <label for="pivotStrategy">
-                Stratégie de regroupement des étudiants :
-            </label>
-
-            <select id="pivotStrategy">
-                <option value="MOST_CONSTRAINED" selected>
-                    Étudiants les plus contraints d’abord
-                </option>
-                <option value="FIRST">Ordre initial</option>
-                <option value="RANDOM">Aléatoire</option>
-            </select>
-        </div>
-        <div style="padding-bottom: 10px;">
-            <button type="button" id="get_planning" >Proposer un nouveau planning pour cette semaine</button>
-            <span id="solveMessage" style="margin-left: 8px;"></span>
-        </div>
-
-        <div id="calendar-header">
-            <button id="prevWeekBtn">◀</button>
-            <span id="currentMondayLabel"></span>
-            <button id="nextWeekBtn">▶</button>
-        </div>
-
-        <div id="calendar-grid">
-            <div id="time-column">
-            </div>
-            <div class="day-column" data-day="MONDAY"></div>
-            <div class="day-column" data-day="TUESDAY"></div>
-            <div class="day-column" data-day="WEDNESDAY"></div>
-            <div class="day-column" data-day="THURSDAY"></div>
-            <div class="day-column" data-day="FRIDAY"></div>
-        </div>
+    <div id="calendrier" class="tab-content">
     </div>
-    <div id="groupsTableContainer" style="margin: 20px;">
-        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
-            <thead>
-            <tr>
-                <th>Enseignement</th>
-                <th>Session</th>
-                <th>Groupe</th>
-                <th>Jour</th>
-                <th>Début</th>
-                <th>Fin</th>
-                <th>Effectif</th>
-                <th>Erreur</th>
-            </tr>
-            </thead>
-            <tbody id="groupsTableBody">
-            </tbody>
-        </table>
-    </div>
-</details>
+</div>
 
-<details class="collapsible">
-    <summary>Répartition des étudiants</summary>
-    <div id="studentsTableContainer">
-        <table style="width:100%; border-collapse: separate; border-spacing: 0; border-top: 1px solid grey;">
-            <thead>
-            <tr>
-                <th style="position: absolute; left: 0; width: 60px;">ID</th>
-                <th style="position: absolute; left: 60px; width: 60px;">Prénom</th>
-                <th>Nom</th>
-                <th>UE suivies</th>
-            </tr>
-            </thead>
-            <tbody id="studentsTableBody">
-            </tbody>
-        </table>
-    </div>
-</details>
 
-<script src="/js/controls.js"></script>
+<script src="/js/index.js"></script>
 <script src="/js/utils.js"></script>
-<script src="/js/table.js"></script>
 <script src="/js/time.js"></script>
 <script src="/js/calendar.js"></script>
+<script src="/js/students.js"></script>
+<script src="/js/ues.js"></script>
 <script>
 
     let teachingUnits = [];
@@ -275,6 +142,7 @@
 
     document.addEventListener("DOMContentLoaded", async () => {
         await bootstrapFromServer();
+        openTab('etudiants');
     });
 
     async function bootstrapFromServer() {
@@ -336,13 +204,6 @@
             students = data.students || [];
             teachers = data.teachers || [];
 
-            generateStudentsTableHeaders(teachingUnits);
-
-            renderTeachingTable();
-            renderStudentsTable();
-            updateTeachingUnitSelect();
-            updateMondayLabel();
-
         } catch (err) {
             console.error("Bootstrap error:", err);
         }
@@ -395,67 +256,6 @@
                 lastMondayInSemester:formatDate(lastMondayInSemester)
             }
         };
-    }
-
-    document.getElementById("get_planning").addEventListener("click", async (event) => {
-        event.preventDefault();
-        allFixedEvents = [] //we reset the fixedEvents to restart from scratch if this button is clicked
-        sendSolvePayload()
-    });
-
-    async function sendSolvePayload() {
-        const msgEl = document.getElementById("solveMessage");
-        msgEl.textContent = "";
-
-        const payload =  buildPayload();
-
-        console.log("payload")
-        console.log(payload)
-
-        const response = await fetch("/solve", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const solution = await response.json();
-
-        console.log("solution")
-        console.log(solution)
-
-        allFixedEvents = solution.allFixedEvents
-        currentWeekEvents = []
-        allFixedEvents.forEach(e => {
-            if (e.week === getWeekStringFromMonday(firstMondayInSemester, currentMondayInSemester)) //an event will be displayed in the calendar is inWeek
-                currentWeekEvents.push(e);
-            }
-        )
-        console.log("current week events")
-        console.log(currentWeekEvents)
-
-        const unAssignedEvents = currentWeekEvents.filter(e => e.error !== null && e.day == null).length
-        const assignedEventsWithErrors = currentWeekEvents.filter(e => e.error !== null && e.day !== null).length
-        let message = [];
-
-        if (unAssignedEvents > 0) {
-            message.push(`${unAssignedEvents} groupes non affichés car sans créneau`);
-        }
-
-        if (assignedEventsWithErrors > 0) {
-            message.push(`${assignedEventsWithErrors} groupes affichés en gris avec créneau mais en conflit`);
-        }
-
-        if (message.length > 0) {
-            msgEl.textContent = message.join(", ");
-            msgEl.style.color = "crimson";
-        }
-        else
-            msgEl.textContent = "";
-        renderGroupsTable()
-        renderCalendar()
-        fillStudentsGroups()
     }
 
     async function saveTeachingUnits() {
@@ -545,6 +345,43 @@
             body: JSON.stringify(payload)
         });
 
+    }
+
+    async function openTab(tabName) {
+        const tabs = document.querySelectorAll('.tab-content');
+        tabs.forEach(tab => tab.classList.remove('active'));
+
+        const tabLinks = document.querySelectorAll('.tabs li');
+        tabLinks.forEach(link => link.classList.remove('active'));
+
+        const tabContent = document.getElementById(tabName);
+        tabContent.classList.add('active');
+        if (event) {
+            event.currentTarget.classList.add('active');
+        } else {
+            // Si pas d'événement, trouver le li correspondant à l'onglet et l'activer
+            const tabLink = document.querySelector(`.tabs li[onclick="openTab('${tabName}')"]`);
+            if (tabLink) {
+                tabLink.classList.add('active');
+            }
+        }
+
+        if (tabName === 'ues' && tabContent.innerHTML.trim() === '') {
+            const response = await fetch('ues.html');
+            const html = await response.text();
+            tabContent.innerHTML = html;
+            initUEs();
+        } else if (tabName === 'calendrier' && tabContent.innerHTML.trim() === '') {
+            const response = await fetch('calendrier.html');
+            const html = await response.text();
+            tabContent.innerHTML = html;
+            initCalendar();
+        } else if (tabName === 'etudiants' && tabContent.innerHTML.trim() === '') {
+            const response = await fetch('etudiants.html');
+            const html = await response.text();
+            tabContent.innerHTML = html;
+            initStudents();
+        }
     }
 
 </script>

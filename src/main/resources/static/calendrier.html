@@ -1,0 +1,57 @@
+<div class="pivot-row">
+    <label for="pivotStrategy">
+        Stratégie de regroupement des étudiants :
+    </label>
+
+    <select id="pivotStrategy">
+        <option value="MOST_CONSTRAINED" selected>
+            Étudiants les plus contraints d’abord
+        </option>
+        <option value="FIRST">Ordre initial</option>
+        <option value="RANDOM">Aléatoire</option>
+    </select>
+</div>
+<div style="padding-bottom: 10px;">
+    <button type="button" id="get_planning" >Proposer un nouveau planning pour cette semaine </button>
+    <span id="solveMessage" style="margin-left: 8px;"></span>
+</div>
+<div id="calendar-header">
+    <button id="prevWeekBtn">◀</button>
+    <span id="currentMondayLabel"></span>
+    <button id="nextWeekBtn">▶</button>
+</div>
+<details class="collapsible" open>
+    <summary>Placement des créneaux</summary>
+    <div style="margin: 20px;">
+        <div id="calendar-grid">
+            <div id="time-column">
+            </div>
+            <div class="day-column" data-day="MONDAY"></div>
+            <div class="day-column" data-day="TUESDAY"></div>
+            <div class="day-column" data-day="WEDNESDAY"></div>
+            <div class="day-column" data-day="THURSDAY"></div>
+            <div class="day-column" data-day="FRIDAY"></div>
+        </div>
+    </div>
+</details>
+<details class="collapsible" open>
+    <summary>Détails des créneaux</summary>
+    <div id="groupsTableContainer" style="margin: 20px;">
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
+            <thead>
+            <tr>
+                <th>Enseignement</th>
+                <th>Session</th>
+                <th>Groupe</th>
+                <th>Jour</th>
+                <th>Début</th>
+                <th>Fin</th>
+                <th>Effectif</th>
+                <th>Erreur</th>
+            </tr>
+            </thead>
+            <tbody id="groupsTableBody">
+            </tbody>
+        </table>
+    </div>
+</details>
