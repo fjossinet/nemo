@@ -69,6 +69,7 @@
 #teachingsCurrentWeekTableContainer td {
     z-index: 1;
     box-sizing: border-box;
+    padding: 0.2rem 0.4rem;
 }
 
 

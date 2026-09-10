@@ -40,3 +40,21 @@ function getStudentCountForTeaching(teachingUnitId) {
         student.teachingUnitIds.includes(teachingUnitId)
     ).length
 }
+
+
+/**
+ * Return the number of timeslot to find per week for a given teaching
+ * @param teaching
+ * @returns {*|number}
+ */
+function getSlotsCountPerWeek(teaching) {
+    const studentCount = getStudentCountForTeaching(teaching.unitId);
+    const groupCount = teaching.groupCapacity === 0
+        ? 1
+        : Math.ceil(studentCount / teaching.groupCapacity);
+    if (teaching.sessionsPerWeek > 0) {
+        return groupCount * teaching.sessionsPerWeek;
+    }
+    // sessionsPerWeek == 0 : un groupe fait toutes ses sessions en une semaine
+    return teaching.sessions;
+}

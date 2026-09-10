@@ -23,7 +23,7 @@ function initCalendar() {
 
     updateMondayLabel();
     renderHours();
-    updateSelectedTeachingsCount();
+    updateSelectedCurrentWeekTeachingsCount();
     renderTeachingsCurrentWeekTable();
 }
 
@@ -97,15 +97,18 @@ function updateMondayLabel() {
 
     teachingsCurrentWeek = teachings
         .filter(t => {
-            getWeeksNeeded(t); // garantit que t.weeks est peuplé
             return (t.weeks || []).includes(currentWeek);
         })
-        .sort((a, b) => a.id.localeCompare(b.id));
+        .sort((a, b) => {
+            const diff = getSlotsCountPerWeek(b) - getSlotsCountPerWeek(a);
+            return diff !== 0 ? diff : a.id.localeCompare(b.id);
+        });
 }
 
 function refreshCalendar() {
     updateMondayLabel();
     renderTeachingsCurrentWeekTable();
+    updateSelectedCurrentWeekTeachingsCount();
     sendSolvePayload();
 }
 
@@ -336,6 +339,7 @@ function updateTeachingCurrentWeekRow(teaching, index, totalTeachings) {
     tr.innerHTML = `
             <td>${teaching.unitId}</td>
             <td>${teaching.type}</td>
+            <td>${getSlotsCountPerWeek(teaching)}</td>
         `;
 
     const tdCheckbox = document.createElement("td");
@@ -354,7 +358,6 @@ function updateTeachingCurrentWeekRow(teaching, index, totalTeachings) {
     } else {
         tbody.appendChild(tr);
     }
-    bindTeachingCurrentWeekTableInputs()
 }
 
 function clusterEvents(events) {
@@ -437,7 +440,7 @@ function bindTeachingCurrentWeekTableInputs() {
                     teaching.selected = isChecked;
                 }
             });
-            updateSelectedTeachingsCount();
+            updateSelectedCurrentWeekTeachingsCount();
         });
     }
 
@@ -449,21 +452,7 @@ function bindTeachingCurrentWeekTableInputs() {
             if (teaching) {
                 teaching.selected = e.target.checked;
             }
-            updateSelectedTeachingsCount();
-        });
-    });
-
-    document.querySelectorAll(".move-button").forEach(button => {
-        button.addEventListener("click", (e) => {
-            const teachingId = e.target.dataset.teachingId;
-            const action = e.target.dataset.action;
-            const index = parseInt(e.target.closest("tr").dataset.index);
-
-            if (action === "up") {
-                moveTeachingUp(index);
-            } else if (action === "down") {
-                moveTeachingDown(index);
-            }
+            updateSelectedCurrentWeekTeachingsCount();
         });
     });
 
@@ -478,15 +467,15 @@ function moveTeachingUp(index) {
 }
 
 function moveTeachingDown(index) {
-    if (index < teachings.length - 1) {
+    if (index < teachingsCurrentWeek.length - 1) {
         [teachingsCurrentWeek[index], teachingsCurrentWeek[index + 1]] = [teachingsCurrentWeek[index + 1], teachingsCurrentWeek[index]];
         renderTeachingsCurrentWeekTable();
     }
 }
 
-function updateSelectedTeachingsCount() {
-    const count = teachings.filter(t => t.selected).length;
-    const text = count + " enseignement(s) sélectionné(s)";
+function updateSelectedCurrentWeekTeachingsCount() {
+    const count = teachingsCurrentWeek.filter(t => t.selected).length;
+    const text = count + " enseignement(s) sélectionné(s) sur "+ teachingsCurrentWeek.length +" pour cette semaine";
     document.querySelectorAll(".teachings-selection-count").forEach(el => {
         el.textContent = text;
     });

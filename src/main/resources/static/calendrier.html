@@ -9,10 +9,11 @@
         <table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
             <thead>
             <tr>
-                <th></th> <!-- column for up/down arrows -->
-                <th><input type="checkbox" id="selectAllTeachings" checked></th>
+                <th>Priorité</th> <!-- column for up/down arrows -->
+                <th>Ajouter à la sélection <input type="checkbox" id="selectAllTeachings" checked></th>
                 <th>Enseignement</th>
                 <th>Type</th>
+                <th>Créneaux à placer</th>
             </tr>
             </thead>
             <tbody id="teachingsCurrentWeekTableBody">
@@ -20,7 +21,7 @@
         </table>
     </div>
 </details>
-<div class="teachings-selection-count">0 enseignement(s) sélectionné(s)</div>
+<div class="teachings-selection-count"></div>
 <div class="pivot-row">
     <label for="pivotStrategy">
         Stratégie de regroupement des étudiants :
