@@ -74,6 +74,7 @@ function bindTeachingTableInputs() {
                     teaching.selected = isChecked;
                 }
             });
+            updateSelectedTeachingsCount();
         });
     }
 
@@ -85,6 +86,7 @@ function bindTeachingTableInputs() {
             if (teaching) {
                 teaching.selected = e.target.checked;
             }
+            updateSelectedTeachingsCount();
         });
     });
 
@@ -229,6 +231,14 @@ function bindTeachingTableInputs() {
     //bindMoveButtons(); // Bind event listeners for move buttons
 }
 
+function updateSelectedTeachingsCount() {
+    const count = teachings.filter(t => t.selected).length;
+    const text = count + " enseignement(s) sélectionné(s)";
+    document.querySelectorAll(".teachings-selection-count").forEach(el => {
+        el.textContent = text;
+    });
+}
+
 function bindMoveButtons() {
     document.querySelectorAll(".move-button").forEach(button => {
         button.addEventListener("click", (e) => {
@@ -283,6 +293,7 @@ function renderTeachingTable() {
             updateTeachingRow(teaching, index, teachings.length);
         });
     bindTeachingTableInputs();
+    updateSelectedTeachingsCount();
 }
 
 function updateTeachingRow(teaching, index, totalTeachings) {

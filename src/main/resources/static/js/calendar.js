@@ -22,8 +22,8 @@ function initCalendar() {
         });
 
     updateMondayLabel();
-
     renderHours();
+    updateSelectedTeachingsCount();
 }
 
 async function sendSolvePayload() {
