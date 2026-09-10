@@ -48,6 +48,59 @@
     justify-content: center;
 }
 
+#teachingsCurrentWeekTableContainer {
+    max-height: 320px;
+    overflow-y: auto;
+    border: 0;
+}
+
+#teachingsCurrentWeekTableContainer thead th {
+    top: 0;
+    background: #f4f4f4;
+    position: sticky;
+    z-index: 2;
+}
+
+#teachingsCurrentWeekTableContainer th {
+    box-sizing: border-box;
+    border :0;
+}
+
+#teachingsCurrentWeekTableContainer td {
+    z-index: 1;
+    box-sizing: border-box;
+}
+
+
+.teachings-selection-count {
+    display: inline-block;
+    background-color: #eaf1ff;
+    width: fit-content;
+    align-self: flex-start;
+    color: #2b7cff;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.2rem 0.6rem;
+    margin: 0.6rem 0;
+    border: 1px solid #cfe0ff;
+    border-radius: 6px;
+}
+
+.move-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 0;
+    margin: 0;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+}
+
+.move-button:disabled {
+    cursor: not-allowed;
+}
 
 #groupsTableContainer {
     max-height: 320px;

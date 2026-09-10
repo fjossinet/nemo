@@ -5,10 +5,12 @@
 </div>
 <details class="collapsible" open>
     <summary>Enseignements se déroulant cette semaine</summary>
-    <div id="teachingsCurrentWeekTableContainer" style="margin: 20px;">
+    <div id="teachingsCurrentWeekTableContainer">
         <table border="1" cellpadding="5" cellspacing="0" style="width:100%;">
             <thead>
             <tr>
+                <th></th> <!-- column for up/down arrows -->
+                <th><input type="checkbox" id="selectAllTeachings" checked></th>
                 <th>Enseignement</th>
                 <th>Type</th>
             </tr>
@@ -18,6 +20,7 @@
         </table>
     </div>
 </details>
+<div class="teachings-selection-count">0 enseignement(s) sélectionné(s)</div>
 <div class="pivot-row">
     <label for="pivotStrategy">
         Stratégie de regroupement des étudiants :
@@ -31,7 +34,6 @@
         <option value="RANDOM">Aléatoire</option>
     </select>
 </div>
-<div class="teachings-selection-count">0 enseignement(s) sélectionné(s)</div>
 <div style="padding-bottom: 10px;">
     <button type="button" id="get_planning" >Proposer de nouveaux créneaux pour cette semaine </button>
     <span id="solveMessage" style="margin-left: 8px;"></span>

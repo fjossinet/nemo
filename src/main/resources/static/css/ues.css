@@ -21,22 +21,6 @@
     box-sizing: border-box;
 }
 
-.move-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.2em;
-    padding: 0;
-    margin: 0;
-    width: 20px;
-    height: 20px;
-    line-height: 20px;
-}
-
-.move-button:disabled {
-    cursor: not-allowed;
-}
-
 .numeric-input {
     width: 4em; /* Réduit la largeur */
     text-align: center;
@@ -90,18 +74,4 @@
     left: 0;
     background-color: white;
     z-index: 1;
-}
-
-.teachings-selection-count {
-    display: inline-block;
-    background-color: #eaf1ff;
-    width: fit-content;
-    align-self: flex-start;
-    color: #2b7cff;
-    font-weight: 600;
-    font-size: 0.85rem;
-    padding: 0.2rem 0.6rem;
-    margin: 0.6rem 0;
-    border: 1px solid #cfe0ff;
-    border-radius: 6px;
 }

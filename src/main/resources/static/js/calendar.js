@@ -24,6 +24,7 @@ function initCalendar() {
     updateMondayLabel();
     renderHours();
     updateSelectedTeachingsCount();
+    renderTeachingsCurrentWeekTable();
 }
 
 async function sendSolvePayload() {
@@ -91,10 +92,20 @@ function updateMondayLabel() {
             month: "long",
             day: "numeric"
         })+")";
+
+    const currentWeek = getWeekStringFromMonday(firstMondayInSemester, currentMondayInSemester);
+
+    teachingsCurrentWeek = teachings
+        .filter(t => {
+            getWeeksNeeded(t); // garantit que t.weeks est peuplé
+            return (t.weeks || []).includes(currentWeek);
+        })
+        .sort((a, b) => a.id.localeCompare(b.id));
 }
 
 function refreshCalendar() {
-    updateMondayLabel()
+    updateMondayLabel();
+    renderTeachingsCurrentWeekTable();
     sendSolvePayload();
 }
 
@@ -261,6 +272,91 @@ function renderGroupsTable() {
     });
 }
 
+function renderTeachingsCurrentWeekTable() {
+    const tbody = document.getElementById("teachingsCurrentWeekTableBody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    teachingsCurrentWeek.forEach((teaching, index) => {
+        updateTeachingCurrentWeekRow(teaching, index, teachingsCurrentWeek.length);
+    });
+
+    bindTeachingCurrentWeekTableInputs();
+}
+
+function updateTeachingCurrentWeekRow(teaching, index, totalTeachings) {
+    const tbody = document.getElementById("teachingsCurrentWeekTableBody");
+    let row = document.querySelector(`#teachingsCurrentWeekTableBody tr[data-teaching-id="${teaching.id}"]`);
+
+    const tr = document.createElement("tr");
+    tr.dataset.teachingId = teaching.id;
+    tr.dataset.index = index; // Add index to the row for reordering
+    const hue = getHueForUnit(teaching.unitId);
+    tr.style.backgroundColor = `hsl(${hue}, 65%, 85%)`;
+
+    // checkbox for row selection
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = teaching.selected === true;
+    checkbox.dataset.teachingId = teaching.id;
+    checkbox.className = "teaching-checkbox";
+
+    // cell for up/down arrows
+    const upButton = document.createElement("button");
+    upButton.style.backgroundColor = "transparent";
+    upButton.style.border = "none";
+    upButton.textContent = "↑";
+    upButton.disabled = index === 0; // Disable up button for the first row
+    upButton.style.color = index === 0 ? tr.style.backgroundColor : "black";
+    upButton.className = "move-button";
+    upButton.dataset.action = "up";
+    upButton.dataset.teachingId = teaching.id;
+
+    upButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const index = parseInt(e.target.closest("tr").dataset.index);
+        moveTeachingUp(index);
+    });
+
+    const downButton = document.createElement("button");
+    downButton.style.backgroundColor = "transparent";
+    downButton.style.border = "none";
+    downButton.textContent = "↓";
+    downButton.disabled = index === totalTeachings - 1; // Disable down button for the last row
+    downButton.style.color = index === totalTeachings - 1 ? tr.style.backgroundColor : "black";
+    downButton.className = "move-button";
+    downButton.dataset.action = "down";
+    downButton.dataset.teachingId = teaching.id;
+    downButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const index = parseInt(e.target.closest("tr").dataset.index);
+        moveTeachingDown(index);
+    });
+
+    tr.innerHTML = `
+            <td>${teaching.unitId}</td>
+            <td>${teaching.type}</td>
+        `;
+
+    const tdCheckbox = document.createElement("td");
+    tdCheckbox.appendChild(checkbox);
+
+    const tdMove = document.createElement("td");
+    tdMove.appendChild(upButton);
+    tdMove.appendChild(document.createElement("br")); // Add a line break
+    tdMove.appendChild(downButton);
+
+    tr.insertBefore(tdCheckbox, tr.firstChild);
+    tr.insertBefore(tdMove, tr.firstChild);
+
+    if (row) {
+        row.replaceWith(tr);
+    } else {
+        tbody.appendChild(tr);
+    }
+    bindTeachingCurrentWeekTableInputs()
+}
+
 function clusterEvents(events) {
 
     const clusters = [];
@@ -322,4 +418,76 @@ function layoutDayEvents(events) {
     const clusters = clusterEvents(sorted);
 
     clusters.forEach(cluster => assignColumns(cluster));
+}
+
+function bindTeachingCurrentWeekTableInputs() {
+
+    // Écouteur pour la case à cocher "Tout sélectionner"
+    const selectAllCheckbox = document.getElementById("selectAllTeachings");
+    selectAllCheckbox.checked = false;
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener("change", (e) => {
+            const isChecked = e.target.checked;
+            // Mettre à jour toutes les cases à cocher des lignes teaching
+            document.querySelectorAll(".teaching-checkbox").forEach(checkbox => {
+                checkbox.checked = isChecked;
+                const teachingId = checkbox.dataset.teachingId;
+                const teaching = teachings.find(t => t.id === teachingId);
+                if (teaching) {
+                    teaching.selected = isChecked;
+                }
+            });
+            updateSelectedTeachingsCount();
+        });
+    }
+
+    // Écouteurs pour les cases à cocher
+    document.querySelectorAll(".teaching-checkbox").forEach(checkbox => {
+        checkbox.addEventListener("change", (e) => {
+            const teachingId = e.target.dataset.teachingId;
+            const teaching = teachings.find(t => t.id === teachingId);
+            if (teaching) {
+                teaching.selected = e.target.checked;
+            }
+            updateSelectedTeachingsCount();
+        });
+    });
+
+    document.querySelectorAll(".move-button").forEach(button => {
+        button.addEventListener("click", (e) => {
+            const teachingId = e.target.dataset.teachingId;
+            const action = e.target.dataset.action;
+            const index = parseInt(e.target.closest("tr").dataset.index);
+
+            if (action === "up") {
+                moveTeachingUp(index);
+            } else if (action === "down") {
+                moveTeachingDown(index);
+            }
+        });
+    });
+
+}
+
+
+function moveTeachingUp(index) {
+    if (index > 0) {
+        [teachingsCurrentWeek[index], teachingsCurrentWeek[index - 1]] = [teachingsCurrentWeek[index - 1], teachingsCurrentWeek[index]];
+        renderTeachingsCurrentWeekTable();
+    }
+}
+
+function moveTeachingDown(index) {
+    if (index < teachings.length - 1) {
+        [teachingsCurrentWeek[index], teachingsCurrentWeek[index + 1]] = [teachingsCurrentWeek[index + 1], teachingsCurrentWeek[index]];
+        renderTeachingsCurrentWeekTable();
+    }
+}
+
+function updateSelectedTeachingsCount() {
+    const count = teachings.filter(t => t.selected).length;
+    const text = count + " enseignement(s) sélectionné(s)";
+    document.querySelectorAll(".teachings-selection-count").forEach(el => {
+        el.textContent = text;
+    });
 }
