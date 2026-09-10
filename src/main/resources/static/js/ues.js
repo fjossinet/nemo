@@ -59,10 +59,10 @@ function initUEs() {
 
 function updateSelectedTeachingsCount() {
     const count = teachings.filter(t => t.selected).length;
-    const el = document.getElementById("selectedTeachingsCount");
-    if (el) {
-        el.textContent = count + " enseignement(s) s\u00e9lectionn\u00e9(s)";
-    }
+    const text = count + " enseignement(s) s\u00e9lectionn\u00e9(s)";
+    document.querySelectorAll(".teachings-selection-count").forEach(el => {
+        el.textContent = text;
+    });
 }
 
 function bindTeachingTableInputs() {
