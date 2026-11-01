@@ -375,7 +375,7 @@
             tabContent.innerHTML = html;
             initUEs();
         } else if (tabName === 'calendrier' && tabContent.innerHTML.trim() === '') {
-            const response = await fetch('calendrier.html');
+            const response = await fetch('calendar.html');
             const html = await response.text();
             tabContent.innerHTML = html;
             initCalendar();
@@ -384,7 +384,7 @@
             renderWeeksHistogram();
         }
         if (tabName === 'etudiants' && tabContent.innerHTML.trim() === '') {
-            const response = await fetch('etudiants.html');
+            const response = await fetch('students.html');
             const html = await response.text();
             tabContent.innerHTML = html;
             initStudents();
