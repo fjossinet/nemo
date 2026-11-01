@@ -99,6 +99,11 @@
                 Dernier lundi
                 <input type="date" id="lastMondayInSemester">
             </label>
+
+            <label>Semaines de vacances (lundis) :</label>
+            <div id="holidayMondaysContainer"></div>
+            <button type="button" id="addHolidayBtn">Ajouter une semaine de vacances</button>
+
             <button type="button" id="updateSemesterMondays">Mettre à jour</button>
             <span id="saveSettingsMessage" style="margin-left: 8px;"></span>
         </fieldset>
@@ -142,6 +147,7 @@
     //the events in the current week displayed in the calendar
     let currentWeekEvents = [];
     let unitHues = {};
+    let holidayMondays = [];
 
     document.addEventListener("DOMContentLoaded", async () => {
         await bootstrapFromServer();
@@ -169,6 +175,11 @@
             currentMondayInSemester = new Date(data.settings.firstMondayInSemester);
             currentMondayInSemester.setHours(0, 0, 0, 0);
 
+            holidayMondays = data.settings.holidayMondays || [];
+            sortHolidayMondays();
+            ensureCurrentMondayIsTeachingWeek();
+            renderHolidayMondaysInputs();
+
             document.getElementById("firstMondayInSemester").value = formatDate(firstMondayInSemester);
             document.getElementById("lastMondayInSemester").value = formatDate(lastMondayInSemester);
 
@@ -183,18 +194,19 @@
                         // Si des contraintes existent déjà (chargées depuis le JSON), on les conserve
                         if (!t.timeConstraints || t.timeConstraints.length === 0) {
                             // Sinon, on génère les contraintes par défaut
-                            const weeksInSemester = getWeekCountBetweenMondays(firstMondayInSemester, lastMondayInSemester);
+                            // (uniquement pour les semaines sans vacances)
                             t.timeConstraints = [];
-                            for (let week = 1; week <= weeksInSemester; week++) {
+                            getNonHolidayWeekMondays(firstMondayInSemester, lastMondayInSemester).forEach(monday => {
+                                const weekLabel = getWeekStringFromMonday(firstMondayInSemester, monday);
                                 ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"].forEach(day => {
                                     t.timeConstraints.push({
-                                        week: "S" + week,
+                                        week: weekLabel,
                                         day: day,
                                         startMinutes: 480,
                                         endMinutes: 1200
                                     });
                                 });
-                            }
+                            });
                         }
                         t.selected = false //allows to select or not the teaching to find a solution
                         teachings.push(t);
@@ -256,7 +268,8 @@
                 currentWeek: getWeekStringFromMonday(firstMondayInSemester, currentMondayInSemester),
                 formerWeek: getWeekStringFromMonday(firstMondayInSemester, currentMondayInSemester),
                 firstMondayInSemester:formatDate(firstMondayInSemester),
-                lastMondayInSemester:formatDate(lastMondayInSemester)
+                lastMondayInSemester:formatDate(lastMondayInSemester),
+                holidayMondays: holidayMondays
             }
         };
     }
@@ -333,7 +346,8 @@
                 currentWeek: getWeekStringFromMonday(firstMondayInSemester, currentMondayInSemester),
                 formerWeek: getWeekStringFromMonday(firstMondayInSemester, currentMondayInSemester),
                 firstMondayInSemester:formatDate(firstMondayInSemester),
-                lastMondayInSemester:formatDate(lastMondayInSemester)
+                lastMondayInSemester:formatDate(lastMondayInSemester),
+                holidayMondays: holidayMondays
             }
         };
 

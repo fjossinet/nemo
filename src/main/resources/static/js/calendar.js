@@ -96,11 +96,25 @@ function updateMondayLabel() {
 }
 
 /**
+ * Luminosité utilisée dans l'histogramme selon le type d'enseignement :
+ * la teinte reste celle de l'UE, seule la luminosité change.
+ */
+function typeLightness(type) {
+    switch (type) {
+        case "CM": return 45;
+        case "TD": return 60;
+        case "TP": return 78;
+        default: return 60;
+    }
+}
+
+/**
  * Histogramme des créneaux à placer par semaine.
- * Axe X : les semaines du semestre (S1..Smax).
- * Chaque barre est découpée en segments empilés, un par UE ayant un
- * enseignement cette semaine ; la hauteur d'un segment est proportionnelle
- * au nombre de créneaux à placer pour cette UE cette semaine.
+ * Axe X : toutes les semaines du semestre, y compris les semaines de
+ * vacances (affichées en grisé, non cliquables, sans nom S1, S2...).
+ * Chaque barre de semaine est découpée en segments empilés, un par UE
+ * ayant un enseignement cette semaine ; la hauteur d'un segment est
+ * proportionnelle au nombre de créneaux à placer pour cette UE cette semaine.
  * Un clic sur une barre sélectionne la semaine correspondante.
  */
 function renderWeeksHistogram() {
@@ -108,57 +122,98 @@ function renderWeeksHistogram() {
     if (!container) return;
     container.innerHTML = "";
 
-    const weekCount = getWeekCountBetweenMondays(firstMondayInSemester, lastMondayInSemester);
     const currentWeek = getWeekStringFromMonday(firstMondayInSemester, currentMondayInSemester);
 
     const weeks = [];
     const unitIds = new Set();
-    for (let w = 1; w <= weekCount; w++) {
-        const week = "S" + w;
+    getAllWeekMondays(firstMondayInSemester, lastMondayInSemester).forEach(monday => {
+        const week = getWeekStringFromMonday(firstMondayInSemester, monday); // null si vacances
+        const holiday = week === null;
+        // slotsPerUnit[unitId][type] = nombre de créneaux à placer
         const slotsPerUnit = {};
-        teachings.forEach(t => {
-            if ((t.weeks || []).includes(week)) {
-                slotsPerUnit[t.unitId] = (slotsPerUnit[t.unitId] || 0) + getSlotsCountPerWeek(t);
-                unitIds.add(t.unitId);
-            }
-        });
-        weeks.push({ week, slotsPerUnit });
-    }
+        if (!holiday) {
+            teachings.forEach(t => {
+                if ((t.weeks || []).includes(week)) {
+                    const perUnit = slotsPerUnit[t.unitId] || (slotsPerUnit[t.unitId] = {});
+                    perUnit[t.type] = (perUnit[t.type] || 0) + getSlotsCountPerWeek(t);
+                    unitIds.add(t.unitId);
+                }
+            });
+        }
+        weeks.push({ monday, week, holiday, slotsPerUnit });
+    });
 
     const maxTotal = Math.max(1, ...weeks.map(w =>
-        Object.values(w.slotsPerUnit).reduce((a, b) => a + b, 0)
+        Object.values(w.slotsPerUnit)
+            .reduce((sum, perType) => sum + Object.values(perType).reduce((a, b) => a + b, 0), 0)
     ));
     const sortedUnitIds = [...unitIds].sort();
 
-    weeks.forEach(({ week, slotsPerUnit }) => {
+    weeks.forEach(({ monday, week, holiday, slotsPerUnit }) => {
         const col = document.createElement("div");
-        col.className = "week-col" + (week === currentWeek ? " current" : "");
+        col.className = "week-col"
+            + (holiday ? " holiday" : "")
+            + (week !== null && week === currentWeek ? " current" : "");
 
         const bar = document.createElement("div");
         bar.className = "week-bar";
 
-        sortedUnitIds.forEach(unitId => {
-            const count = slotsPerUnit[unitId] || 0;
-            if (count === 0) return;
-            const segment = document.createElement("div");
-            segment.className = "week-segment";
-            segment.style.backgroundColor = `hsl(${getHueForUnit(unitId)}, 65%, 60%)`;
-            segment.style.height = (count / maxTotal * 100) + "%";
-            segment.title = `${unitId} : ${count} créneau(x) à placer`;
-            bar.appendChild(segment);
-        });
+        if (holiday) {
+            bar.title = `Semaine de vacances (${monday.toLocaleDateString("fr-FR")})`;
+        } else {
+            // UEs ayant au moins un créneau cette semaine
+            const activeUnitIds = sortedUnitIds.filter(unitId =>
+                Object.values(slotsPerUnit[unitId] || {}).some(c => c > 0)
+            );
+            activeUnitIds.forEach((unitId, unitIndex) => {
+                const perType = slotsPerUnit[unitId] || {};
+                const unitTotal = Object.values(perType).reduce((a, b) => a + b, 0);
+
+                // conteneur de l'aire de l'UE, entouré d'un filet noir
+                const unitArea = document.createElement("div");
+                unitArea.className = "week-unit";
+                unitArea.style.height = (unitTotal / maxTotal * 100) + "%";
+                unitArea.title = `${unitId} : ${unitTotal} créneau(x) à placer`;
+
+                ["CM", "TD", "TP"].forEach(type => {
+                    const count = perType[type] || 0;
+                    if (count === 0) return;
+                    const segment = document.createElement("div");
+                    segment.className = "week-segment";
+                    // même teinte que l'UE, luminosité différente selon le type
+                    segment.style.backgroundColor = `hsl(${getHueForUnit(unitId)}, 65%, ${typeLightness(type)}%)`;
+                    // hauteur proportionnelle au nombre de créneaux du type
+                    segment.style.flex = `${count} 0 0`;
+                    segment.title = `${unitId} ${type} : ${count} créneau(x) à placer`;
+                    unitArea.appendChild(segment);
+                });
+
+                bar.appendChild(unitArea);
+                // espace entre les aires de deux UEs différentes
+                if (unitIndex < activeUnitIds.length - 1) {
+                    const spacer = document.createElement("div");
+                    spacer.className = "week-segment-spacer";
+                    bar.appendChild(spacer);
+                }
+            });
+        }
 
         const label = document.createElement("div");
         label.className = "week-label";
-        label.textContent = week;
+        // les semaines de vacances n'ont pas de nom S : on affiche la date du lundi
+        label.textContent = holiday
+            ? monday.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" })
+            : week;
 
         col.appendChild(bar);
         col.appendChild(label);
 
-        col.addEventListener("click", () => {
-            currentMondayInSemester = getMondayFromWeekString(firstMondayInSemester, week);
-            refreshCalendar();
-        });
+        if (!holiday) {
+            col.addEventListener("click", () => {
+                currentMondayInSemester = new Date(monday);
+                refreshCalendar();
+            });
+        }
 
         container.appendChild(col);
     });

@@ -1,7 +1,7 @@
 #calendar-grid {
     display: grid;
     grid-template-columns: 60px repeat(5, 1fr);
-    height: 800px;
+    height: 1000px;
     border:  2px solid #999;
     box-shadow: 1px 0 0 rgba(0, 0, 0, 0.2);
 }
@@ -53,7 +53,7 @@
     align-items: stretch;
     gap: 2px;
     width: 100%;
-    height: 240px;
+    height: 500px;
     border-bottom: 2px solid #999;
     padding: 0 4px;
 }
@@ -71,6 +71,45 @@
     outline-offset: 1px;
 }
 
+.week-col.holiday {
+    cursor: not-allowed;
+}
+
+.week-col.holiday .week-bar {
+    background: repeating-linear-gradient(
+        45deg,
+        #e0e0e0,
+        #e0e0e0 6px,
+        #f4f4f4 6px,
+        #f4f4f4 12px
+    );
+}
+
+.week-col.holiday .week-label {
+    color: #999;
+}
+
+#histogramLegend {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.legend-swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
 .week-bar {
     flex: 1;
     display: flex;
@@ -78,8 +117,29 @@
     min-height: 4px;
 }
 
+.week-unit {
+    width: 100%;
+    border: 1.5px solid black;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column-reverse;
+}
+
 .week-segment {
     width: 100%;
+    box-sizing: border-box;
+    border-top: 0.5px solid black;
+}
+
+/* le segment du haut touche déjà le filet épais de l'aire de l'UE */
+.week-unit .week-segment:last-child {
+    border-top: 0;
+}
+
+.week-segment-spacer {
+    width: 100%;
+    flex: 0 0 3px;
+    background: transparent;
 }
 
 .week-label {

@@ -301,10 +301,19 @@ function updateTeachingRow(teaching, index) {
 }
 
 function generateTimeConstraintsTable(teaching) {
-    const startDate = new Date(getMondayFromWeekString(firstMondayInSemester, teaching.startDate));
-
     // Calculer le nombre de semaines nécessaires
     const weeksNeeded = getWeeksNeeded(teaching)[0];
+
+    // Semaines affichées : les semaines sans vacances du semestre à partir
+    // de la semaine de début de l'enseignement (les semaines de vacances
+    // n'ont pas de nom S et ne sont jamais affichées)
+    const semesterWeeks = getNonHolidayWeekMondays(firstMondayInSemester, lastMondayInSemester)
+        .map(d => getWeekStringFromMonday(firstMondayInSemester, d));
+    let startIndex = semesterWeeks.indexOf(teaching.startDate);
+    if (startIndex === -1) startIndex = 0;
+    const displayedWeeks = semesterWeeks
+        .slice(startIndex, startIndex + weeksNeeded)
+        .map(label => ({ label, date: getMondayFromWeekString(firstMondayInSemester, label) }));
 
     // Liste des jours en anglais pour la comparaison
     const daysOfWeek = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"];
@@ -319,30 +328,28 @@ function generateTimeConstraintsTable(teaching) {
     th.innerHTML = teaching.id;
     headerRow1.appendChild(th);
 
-    for (let week = 0; week < weeksNeeded; week++) {
-        const weekDate = new Date(startDate);
-        weekDate.setDate(startDate.getDate() + week * 7);
+    displayedWeeks.forEach(({ label, date: weekDate }) => {
         const thWeek = document.createElement("th");
         thWeek.colSpan = 5; // 5 jours par semaine
-        thWeek.textContent = `${getWeekStringFromMonday(firstMondayInSemester, weekDate)} (${weekDate.toLocaleDateString()})`;
-        thWeek.dataset.week = getWeekStringFromMonday(firstMondayInSemester, weekDate);
+        thWeek.textContent = `${label} (${weekDate.toLocaleDateString()})`;
+        thWeek.dataset.week = label;
         thWeek.style.cursor = "pointer";
         thWeek.addEventListener("click", () => {
-            toggleWeek(getWeekStringFromMonday(firstMondayInSemester, weekDate));
+            toggleWeek(label);
             updateTimeConstraints(teaching);
         });
         headerRow1.appendChild(thWeek);
-    }
+    });
     thead.appendChild(headerRow1);
 
     // Ligne 2 : En-têtes des jours
     const headerRow2 = document.createElement("tr");
     headerRow2.appendChild(document.createElement("th")); // Case vide pour l'en-tête des lignes
 
-    for (let week = 0; week < weeksNeeded; week++) {
+    displayedWeeks.forEach(({ date: weekDate }) => {
         for (let day = 0; day < 5; day++) {
-            const dayDate = new Date(startDate);
-            dayDate.setDate(startDate.getDate() + week * 7 + day);
+            const dayDate = new Date(weekDate);
+            dayDate.setDate(weekDate.getDate() + day);
             const thDay = document.createElement("th");
             thDay.textContent = dayDate.toLocaleDateString("fr-FR", { weekday: "short" });
             thDay.style.cursor = "pointer";
@@ -352,7 +359,7 @@ function generateTimeConstraintsTable(teaching) {
             });
             headerRow2.appendChild(thDay);
         }
-    }
+    });
     thead.appendChild(headerRow2);
 
     // Générer les lignes pour les créneaux horaires (8h00 à 20h00, par tranches de 30 minutes)
@@ -375,16 +382,13 @@ function generateTimeConstraintsTable(teaching) {
             tr.appendChild(thTime);
 
             // Générer les cases pour chaque jour de chaque semaine
-            for (let week = 0; week < weeksNeeded; week++) {
-                const weekDate = new Date(startDate);
-                weekDate.setDate(startDate.getDate() + week * 7);
+            displayedWeeks.forEach(({ label: weekName, date: weekDate }) => {
                 for (let day = 0; day < 5; day++) {
                     const td = document.createElement("td");
-                    td.dataset.week = getWeekStringFromMonday(firstMondayInSemester, weekDate)
+                    td.dataset.week = weekName
                     td.dataset.day = daysOfWeek[day];
                     td.dataset.time = timeSlot;
 
-                    const weekName = getWeekStringFromMonday(firstMondayInSemester, weekDate);
                     const dayName = daysOfWeek[day];
 
                     //if no constraints found for this week
@@ -409,7 +413,7 @@ function generateTimeConstraintsTable(teaching) {
                     });
                     tr.appendChild(td);
                 }
-            }
+            });
             tbody.appendChild(tr);
         }
     }
