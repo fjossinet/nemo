@@ -379,7 +379,11 @@
             const html = await response.text();
             tabContent.innerHTML = html;
             initCalendar();
-        } else if (tabName === 'etudiants' && tabContent.innerHTML.trim() === '') {
+        }
+        if (tabName === 'calendrier' && typeof renderWeeksHistogram === 'function') {
+            renderWeeksHistogram();
+        }
+        if (tabName === 'etudiants' && tabContent.innerHTML.trim() === '') {
             const response = await fetch('etudiants.html');
             const html = await response.text();
             tabContent.innerHTML = html;

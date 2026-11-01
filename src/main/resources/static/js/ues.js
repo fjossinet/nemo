@@ -53,6 +53,13 @@ function initUEs() {
         await saveTeachingUnits();
     });
 
+    const copyFirstWeekBtn = document.getElementById("copyFirstWeekBtn");
+    if (copyFirstWeekBtn) {
+        copyFirstWeekBtn.addEventListener("click", () => {
+            copyFirstWeekConstraints();
+        });
+    }
+
     updateTeachingUnitSelect();
     renderTeachingTable();
 }
@@ -568,4 +575,43 @@ function moveUEColumn(fromUEIndex, toUEIndex) {
             }
         });
     });
+}
+
+function copyFirstWeekConstraints() {
+    const teaching = lastSelectedTeaching;
+    if (!teaching) return;
+
+    const allWeeks = Array.from(document.querySelectorAll("#timeConstraintsTable thead th[data-week]"))
+        .map(th => th.dataset.week)
+        .filter(Boolean);
+    if (allWeeks.length < 2) return;
+
+    const firstWeek = allWeeks[0];
+    const otherWeeks = allWeeks.slice(1);
+
+    // index l'état de la première semaine par "day|time"
+    const firstWeekState = {};
+    document.querySelectorAll(`#timeConstraintsTable tbody td[data-week="${firstWeek}"]`).forEach(td => {
+        const key = `${td.dataset.day}|${td.dataset.time}`;
+        firstWeekState[key] = td.classList.contains("selected");
+    });
+
+    otherWeeks.forEach(week => {
+        // ignore les semaines entièrement non sélectionnées (impossibles)
+        const weekCells = document.querySelectorAll(`#timeConstraintsTable tbody td[data-week="${week}"]`);
+        const hasAnySelected = Array.from(weekCells).some(td => td.classList.contains("selected"));
+        if (!hasAnySelected) return;
+
+        weekCells.forEach(td => {
+            const key = `${td.dataset.day}|${td.dataset.time}`;
+            const selected = firstWeekState[key];
+            if (selected) {
+                td.classList.add("selected");
+            } else {
+                td.classList.remove("selected");
+            }
+        });
+    });
+
+    updateTimeConstraints(teaching);
 }

@@ -9,18 +9,6 @@ function initCalendar() {
         await sendSolvePayload()
     });
 
-    document.getElementById("prevWeekBtn")
-        .addEventListener("click", () => {
-            currentMondayInSemester.setDate(currentMondayInSemester.getDate() - 7);
-            refreshCalendar();
-        });
-
-    document.getElementById("nextWeekBtn")
-        .addEventListener("click", () => {
-            currentMondayInSemester.setDate(currentMondayInSemester.getDate() + 7);
-            refreshCalendar();
-        });
-
     updateMondayLabel();
     renderHours();
     updateSelectedCurrentWeekTeachingsCount();
@@ -103,6 +91,77 @@ function updateMondayLabel() {
             const diff = getSlotsCountPerWeek(b) - getSlotsCountPerWeek(a);
             return diff !== 0 ? diff : a.id.localeCompare(b.id);
         });
+
+    renderWeeksHistogram();
+}
+
+/**
+ * Histogramme des créneaux à placer par semaine.
+ * Axe X : les semaines du semestre (S1..Smax).
+ * Chaque barre est découpée en segments empilés, un par UE ayant un
+ * enseignement cette semaine ; la hauteur d'un segment est proportionnelle
+ * au nombre de créneaux à placer pour cette UE cette semaine.
+ * Un clic sur une barre sélectionne la semaine correspondante.
+ */
+function renderWeeksHistogram() {
+    const container = document.getElementById("weeksHistogram");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const weekCount = getWeekCountBetweenMondays(firstMondayInSemester, lastMondayInSemester);
+    const currentWeek = getWeekStringFromMonday(firstMondayInSemester, currentMondayInSemester);
+
+    const weeks = [];
+    const unitIds = new Set();
+    for (let w = 1; w <= weekCount; w++) {
+        const week = "S" + w;
+        const slotsPerUnit = {};
+        teachings.forEach(t => {
+            if ((t.weeks || []).includes(week)) {
+                slotsPerUnit[t.unitId] = (slotsPerUnit[t.unitId] || 0) + getSlotsCountPerWeek(t);
+                unitIds.add(t.unitId);
+            }
+        });
+        weeks.push({ week, slotsPerUnit });
+    }
+
+    const maxTotal = Math.max(1, ...weeks.map(w =>
+        Object.values(w.slotsPerUnit).reduce((a, b) => a + b, 0)
+    ));
+    const sortedUnitIds = [...unitIds].sort();
+
+    weeks.forEach(({ week, slotsPerUnit }) => {
+        const col = document.createElement("div");
+        col.className = "week-col" + (week === currentWeek ? " current" : "");
+
+        const bar = document.createElement("div");
+        bar.className = "week-bar";
+
+        sortedUnitIds.forEach(unitId => {
+            const count = slotsPerUnit[unitId] || 0;
+            if (count === 0) return;
+            const segment = document.createElement("div");
+            segment.className = "week-segment";
+            segment.style.backgroundColor = `hsl(${getHueForUnit(unitId)}, 65%, 60%)`;
+            segment.style.height = (count / maxTotal * 100) + "%";
+            segment.title = `${unitId} : ${count} créneau(x) à placer`;
+            bar.appendChild(segment);
+        });
+
+        const label = document.createElement("div");
+        label.className = "week-label";
+        label.textContent = week;
+
+        col.appendChild(bar);
+        col.appendChild(label);
+
+        col.addEventListener("click", () => {
+            currentMondayInSemester = getMondayFromWeekString(firstMondayInSemester, week);
+            refreshCalendar();
+        });
+
+        container.appendChild(col);
+    });
 }
 
 function refreshCalendar() {

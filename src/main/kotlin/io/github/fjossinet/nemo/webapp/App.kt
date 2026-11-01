@@ -7,7 +7,8 @@ fun main() {
     embeddedServer(
         Netty,
         port = 8080,
-        host = "0.0.0.0"
+        host = "0.0.0.0",
+        watchPaths = listOf("target/classes") //to allow hot reload from IntelliJ
     ) {
         configureSerialization()
         configureRouting()
